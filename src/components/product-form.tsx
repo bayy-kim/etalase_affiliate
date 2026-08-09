@@ -241,7 +241,7 @@ export function ProductForm({
       <input type="hidden" name="isActive" value={isActive ? "on" : "off"} />
 
       {/* Submit sticky */}
-      <div className="fixed bottom-0 left-1/2 z-50 w-full max-w-[480px] -translate-x-1/2 border-t border-border-subtle bg-background-base px-4 py-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
+      <div className="fixed bottom-0 left-0 right-0 z-50 mx-auto w-full max-w-[480px] border-t border-border-subtle bg-background-base px-4 py-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
         <Button type="submit" className="w-full" disabled={pending} aria-busy={pending}>
           {pending ? "Menyimpan..." : isEdit ? "Simpan Perubahan" : "Simpan Produk"}
         </Button>

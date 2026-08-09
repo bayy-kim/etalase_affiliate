@@ -44,7 +44,7 @@ export async function loginAction(_: LoginResult | null, formData: FormData): Pr
   const isDb = Boolean(process.env.DATABASE_URL);
   const passwordOk = isDb
     ? admin !== null && (await bcrypt.compare(parsed.data.password, admin.passwordHash))
-    : parsed.data.password === (process.env.ADMIN_PASSWORD ?? "changeme") &&
+    : parsed.data.password === (process.env.ADMIN_PASSWORD ?? "bayy muhamad") &&
       admin !== null;
 
   if (!admin || !passwordOk) {

@@ -11,8 +11,10 @@ import { toggleProductAction, deleteProductAction } from "@/server/actions/produ
 
 export function ProductActions({
   product,
+  layout = "row",
 }: {
   product: { id: string; label: string; isActive: boolean };
+  layout?: "row" | "card";
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -34,7 +36,13 @@ export function ProductActions({
   };
 
   return (
-    <div className="flex shrink-0 flex-col items-end gap-2">
+    <div
+      className={
+        layout === "card"
+          ? "flex shrink-0 items-center gap-2"
+          : "flex shrink-0 flex-col items-end gap-2"
+      }
+    >
       <div className="relative">
         <button
           type="button"
@@ -92,6 +100,7 @@ export function ProductActions({
         checked={product.isActive}
         onCheckedChange={toggle}
         aria-label={product.isActive ? "Nonaktifkan produk" : "Aktifkan produk"}
+        className={layout === "card" ? "order-first" : undefined}
       />
 
       <AnimatePresence>

@@ -225,7 +225,7 @@ const mockAudit: AuditEntry[] = [];
 
 const mockAdmin = (): AdminUser => ({
   id: "admin-mock",
-  email: process.env.ADMIN_EMAIL ?? "admin@etalase.com",
+  email: process.env.ADMIN_EMAIL ?? "muhamadaibayu@gmail.com",
   passwordHash: "$2a$12$mockhash",
   totpSecret: null,
   totpEnabled: false,
@@ -498,21 +498,66 @@ export async function recordClick(productId: string): Promise<boolean> {
 
 export type DailyClick = { label: string; clicks: number };
 
+const DAY_NAMES = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
+
 export async function getClickTrend(days = 7): Promise<DailyClick[]> {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const start = new Date(today);
+  start.setDate(start.getDate() - (days - 1));
+
+  // Ambil klik sebaris dari DB atau mock, lalu agregasi per hari di JS.
+  let rows: { createdAt: Date }[];
+  if (isDb()) {
+    rows = await prisma.clickLog.findMany({
+      where: { createdAt: { gte: start } },
+      select: { createdAt: true },
+    });
+  } else {
+    rows = mockClicks.filter((c) => c.createdAt >= start);
+  }
+
   const out: DailyClick[] = [];
-  const names = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
-  for (let i = days - 1; i >= 0; i--) {
-    const start = daysAgo(i);
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(start.getTime() + 86_400_000);
-    const count = mockClicks.filter((c) => c.createdAt >= start && c.createdAt < end).length;
-    out.push({ label: names[start.getDay()] ?? String(i), clicks: count });
+  for (let i = 0; i < days; i++) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    const next = new Date(d);
+    next.setDate(d.getDate() + 1);
+    const count = rows.filter((c) => c.createdAt >= d && c.createdAt < next).length;
+    out.push({ label: DAY_NAMES[d.getDay()], clicks: count });
   }
   return out;
 }
 
 export async function getTotalClicks(): Promise<number> {
+  if (isDb()) return prisma.clickLog.count();
   return mockClicks.length;
+}
+
+export type TrendDelta = { current: number; previous: number; deltaPct: number | null };
+
+/** Bandingkan total klik N hari terakhir vs N hari sebelumnya. */
+export async function getClickDelta(days = 7): Promise<TrendDelta> {
+  const current = await getClickTrend(days);
+  const prevStart = new Date();
+  prevStart.setHours(0, 0, 0, 0);
+  prevStart.setDate(prevStart.getDate() - (days * 2 - 1));
+  const prevEnd = new Date(prevStart);
+  prevEnd.setDate(prevStart.getDate() + days);
+
+  let prevCount: number;
+  if (isDb()) {
+    prevCount = await prisma.clickLog.count({
+      where: { createdAt: { gte: prevStart, lt: prevEnd } },
+    });
+  } else {
+    prevCount = mockClicks.filter((c) => c.createdAt >= prevStart && c.createdAt < prevEnd).length;
+  }
+
+  const currentCount = current.reduce((s, d) => s + d.clicks, 0);
+  const deltaPct =
+    prevCount === 0 ? (currentCount > 0 ? 100 : null) : ((currentCount - prevCount) / prevCount) * 100;
+  return { current: currentCount, previous: prevCount, deltaPct };
 }
 
 /* =========================================================================
@@ -643,6 +688,28 @@ export async function getEarningsMonth(): Promise<number> {
       return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
     })
     .reduce((s, e) => s + e.amount, 0);
+}
+
+export type EarningsDelta = { current: number; previous: number; deltaPct: number | null };
+
+export async function getEarningsDelta(): Promise<EarningsDelta> {
+  const earnings = await listEarnings();
+  const now = new Date();
+  const thisMonth = now.getMonth();
+  const thisYear = now.getFullYear();
+  const prevMonth = thisMonth === 0 ? 11 : thisMonth - 1;
+  const prevYear = thisMonth === 0 ? thisYear - 1 : thisYear;
+
+  let current = 0;
+  let previous = 0;
+  for (const e of earnings) {
+    const d = new Date(e.periodDate);
+    if (d.getMonth() === thisMonth && d.getFullYear() === thisYear) current += e.amount;
+    else if (d.getMonth() === prevMonth && d.getFullYear() === prevYear) previous += e.amount;
+  }
+  const deltaPct =
+    previous === 0 ? (current > 0 ? 100 : null) : ((current - previous) / previous) * 100;
+  return { current, previous, deltaPct };
 }
 
 /* =========================================================================

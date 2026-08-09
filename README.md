@@ -1,16 +1,16 @@
 # Etalase Affiliate
 
-Link-in-bio storefront untuk affiliate **TikTok Shop & Shopee** — dark commerce minimalis, mobile-first. Web ini murni **etalase + redirect + pencatatan performa**, tidak memproses pembayaran apa pun. Transaksi selalu terjadi di platform resmi.
+Web **link-in-bio** untuk affiliate marketplace (TikTok Shop & Shopee) — dark commerce minimalis, mobile-first. Web ini murni **etalase + redirect + pencatatan performa**, tidak memproses pembayaran apa pun. Transaksi selalu terjadi di platform resmi.
 
 ## Fitur
 
-- **Storefront publik** (`/`) — profil, stat mini, filter kategori, daftar produk (icon + label + badge platform + chevron)
-- **Redirect + click tracking** (`/go/[id]`) — klik tercatat 100% server-side, lalu 302 ke link affiliate
+- **Storefront publik** (`/`) — profil, statistik ringkas, filter kategori, daftar produk (icon + label + badge platform + chevron); layout desktop terpisah dengan grid produk pilihan
+- **Redirect + click tracking** (`/go/[id]`) — klik tercatat 100% server-side, lalu redirect ke link affiliate
 - **Login admin + 2FA TOTP wajib** — dua langkah (password → kode authenticator), secret terenkripsi AES-256-GCM
 - **CRUD produk** — label, kategori, icon picker, platform toggle, link affiliate, rentang harga, toggle tampil
-- **Catat earnings manual** — bottom sheet, produk opsional, nominal integer Rupiah, tanggal, catatan
-- **Dashboard admin** — stat card, chart klik 7 hari, chart earnings per platform, top 5 produk
-- **Settings** — profil, status 2FA, logout
+- **Catat earnings manual** — form mobile (bottom sheet) + form desktop inline, nominal integer Rupiah
+- **Dashboard admin** — stat card dengan tren, chart klik 7 hari, chart earnings per platform, top produk (list mobile / tabel desktop)
+- **Panel admin responsif** — bottom nav di mobile, sidebar di desktop
 
 ## Tech Stack
 
@@ -27,15 +27,14 @@ npm install
 npm run dev        # http://localhost:3000
 ```
 
-Tanpa database, app memakai **mock store** (produk & data contoh) supaya langsung bisa dibuka. Login demo:
-email `admin@etalase.com` · password `changeme` (lihat `.env.example`).
+Tanpa database, app memakai **mock store** (produk & data contoh) supaya langsung bisa dicoba. Konfigurasi admin awal (`ADMIN_EMAIL`, `ADMIN_PASSWORD`) dibaca dari `.env` — lihat `.env.example`.
 
 ### Aktifkan PostgreSQL (Neon)
 
 ```bash
-cp .env.example .env   # isi DATABASE_URL, SESSION_SECRET, ENCRYPTION_KEY, ADMIN_PASSWORD
+cp .env.example .env   # isi DATABASE_URL, SESSION_SECRET, ENCRYPTION_KEY, ADMIN_EMAIL, ADMIN_PASSWORD
 npx prisma migrate dev --name init
-npm run prisma:seed    # 1 admin user + produk awal
+npm run prisma:seed    # admin user + produk awal
 npm run dev
 ```
 
@@ -46,10 +45,10 @@ npm run dev
 ```
 prisma/                 # schema + seed
 src/app/                # halaman & route handler
-src/app/(public) → page # storefront
+src/app/page.tsx        # storefront (mobile + desktop)
 src/app/go/[productId]  # redirect + click tracking
 src/app/admin/*         # login, verify-2fa, setup-2fa, dashboard, products, earnings, settings
-src/components/         # ui primitives + storefront + admin
+src/components/         # ui primitives + storefront + admin (AdminShell sidebar desktop)
 src/lib/                # data, session, encryption, rate-limit, validations
 src/server/actions/     # server actions (auth, product, earning)
 src/middleware.ts       # auth guard level middleware
@@ -58,4 +57,4 @@ src/middleware.ts       # auth guard level middleware
 ## Deploy (Vercel)
 
 Env vars wajib: `DATABASE_URL`, `SESSION_SECRET`, `ENCRYPTION_KEY`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`.
-`SESSION_SECRET` wajib di-set di production (session memakai jose HMAC).
+`SESSION_SECRET` dan `ENCRYPTION_KEY` wajib di-set di production.

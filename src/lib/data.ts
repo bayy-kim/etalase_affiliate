@@ -214,15 +214,6 @@ const mockEarnings: {
 
 const mockAudit: AuditEntry[] = [];
 
-const mockAdmin = (): AdminUser => ({
-  id: "admin-mock",
-  email: process.env.ADMIN_EMAIL ?? "muhamadaibayu@gmail.com",
-  passwordHash: "$2a$12$mockhash",
-  totpSecret: null,
-  totpEnabled: false,
-  lastLoginAt: null,
-});
-
 /* =========================================================================
  * Profile — disimpan di DB (ProfileSetting), fallback env untuk default
  * ======================================================================== */
@@ -771,8 +762,8 @@ export async function getAdminByEmail(email: string): Promise<AdminUser | null> 
       lastLoginAt: r.lastLoginAt ? toIso(r.lastLoginAt) : null,
     };
   }
-  const admin = mockAdmin();
-  return admin.email === email ? admin : null;
+  // Tanpa database, TIDAK ada jalur autentikasi admin (mock store hanya untuk produk/preview).
+  return null;
 }
 
 export async function getAdminById(id: string): Promise<AdminUser | null> {
@@ -785,36 +776,24 @@ export async function getAdminById(id: string): Promise<AdminUser | null> {
       lastLoginAt: r.lastLoginAt ? toIso(r.lastLoginAt) : null,
     };
   }
-  const admin = mockAdmin();
-  return admin.id === id ? admin : null;
+  return null;
 }
 
 export async function saveTotpSecret(adminId: string, secret: string, totpEnabled: boolean): Promise<void> {
+  if (!isDb()) return; // tanpa DB tidak ada admin
   const encrypted = encryptSecret(secret);
-  if (isDb()) {
-    await prisma.adminUser.update({
-      where: { id: adminId },
-      data: { totpSecret: encrypted, totpEnabled },
-    });
-    return;
-  }
-  const admin = mockAdmin();
-  if (admin.id === adminId) {
-    admin.totpSecret = encrypted;
-    admin.totpEnabled = totpEnabled;
-  }
+  await prisma.adminUser.update({
+    where: { id: adminId },
+    data: { totpSecret: encrypted, totpEnabled },
+  });
 }
 
 export async function markLogin(adminId: string): Promise<void> {
-  if (isDb()) {
-    await prisma.adminUser.update({
-      where: { id: adminId },
-      data: { lastLoginAt: new Date() },
-    });
-    return;
-  }
-  const admin = mockAdmin();
-  if (admin.id === adminId) admin.lastLoginAt = new Date().toISOString();
+  if (!isDb()) return; // tanpa DB tidak ada admin
+  await prisma.adminUser.update({
+    where: { id: adminId },
+    data: { lastLoginAt: new Date() },
+  });
 }
 
 export async function writeAudit(

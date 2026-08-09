@@ -2,21 +2,17 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
+import { getSessionSecretKey } from "@/lib/session-secret";
+
 const SESSION_COOKIE = "etalase_session";
 const PENDING_COOKIE = "etalase_pending_2fa";
-
-function secretKey(): Uint8Array {
-  const raw =
-    process.env.SESSION_SECRET ??
-    process.env.NEXTAUTH_SECRET ??
-    "dev-only-secret-etl-2026-jangan-pakai-di-produksi";
-  return new TextEncoder().encode(raw);
-}
 
 async function readToken(value: string | undefined): Promise<unknown | null> {
   if (!value) return null;
   try {
-    const { payload } = await jwtVerify(value, secretKey(), { algorithms: ["HS256"] });
+    const { payload } = await jwtVerify(value, getSessionSecretKey(), {
+      algorithms: ["HS256"],
+    });
     return payload;
   } catch {
     return null;

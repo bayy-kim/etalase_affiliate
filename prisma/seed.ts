@@ -4,8 +4,13 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function main() {
-  const email = process.env.ADMIN_EMAIL ?? "muhamadaibayu@gmail.com";
-  const password = process.env.ADMIN_PASSWORD ?? "bayy muhamad";
+  const email = process.env.ADMIN_EMAIL;
+  const password = process.env.ADMIN_PASSWORD;
+  if (!email || !password) {
+    throw new Error(
+      "Seed admin gagal: ADMIN_EMAIL dan ADMIN_PASSWORD wajib di-set di environment."
+    );
+  }
 
   const passwordHash = await bcrypt.hash(password, 12);
 

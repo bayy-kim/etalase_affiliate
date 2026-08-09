@@ -5,19 +5,14 @@ import {
   randomBytes,
 } from "crypto";
 
+import { getSessionSecretRaw } from "@/lib/session-secret";
+
 const ALGORITHM = "aes-256-gcm";
 
 function getKey(): Buffer {
-  const raw = process.env.ENCRYPTION_KEY ?? process.env.SESSION_SECRET ?? "";
-  if (raw) {
-    // Normalisasi ke 32 byte (SHA-256) supaya aman dari panjang key apa pun.
-    return createHash("sha256").update(raw).digest();
-  }
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("ENCRYPTION_KEY atau SESSION_SECRET wajib di-set di production.");
-  }
-  // Fallback hanya untuk development/mock store — produksi wajib ENCRYPTION_KEY.
-  return createHash("sha256").update("dev-only-encryption-etl-2026-jangan-pakai-di-produksi").digest();
+  const raw = process.env.ENCRYPTION_KEY ?? process.env.SESSION_SECRET ?? getSessionSecretRaw();
+  // Normalisasi ke 32 byte (SHA-256) supaya aman dari panjang key apa pun.
+  return createHash("sha256").update(raw).digest();
 }
 
 export function encryptSecret(plaintext: string): string {

@@ -12,6 +12,7 @@ export type ProductRowData = {
   category: string;
   iconKey: string;
   platform: PlatformKey;
+  pos?: number;
 };
 
 export function ProductRow({ product }: { product: ProductRowData }) {
@@ -28,7 +29,12 @@ export function ProductRow({ product }: { product: ProductRowData }) {
         prefetch={false}
         className="group flex items-center justify-between rounded-3xl border border-slate-200/80 bg-white p-4.5 shadow-clay-card transition-all duration-200 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
       >
-        <span className="flex min-w-0 items-center gap-4">
+        <span className="flex min-w-0 items-center gap-3.5">
+          {product.pos !== undefined && (
+            <span className="font-mono text-[15px] font-extrabold text-indigo-600 shrink-0 min-w-[24px]">
+              {String(product.pos).padStart(2, "0")}
+            </span>
+          )}
           <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-t border-white border-b border-indigo-200/60 bg-gradient-to-b from-indigo-100 to-indigo-200/90 text-indigo-600 shadow-[0_6px_14px_-3px_rgba(99,102,241,0.25)] transition-all duration-200 group-hover:scale-105 group-hover:from-indigo-600 group-hover:to-indigo-700 group-hover:text-white group-hover:shadow-[0_8px_18px_-3px_rgba(99,102,241,0.4)]">
             <Icon className="h-5 w-5" aria-hidden="true" />
           </span>

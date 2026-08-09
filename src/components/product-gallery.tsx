@@ -145,7 +145,7 @@ export function ProductGallery({
             {visibleResults.map((it) => (
               <ProductRow
                 key={it.id}
-                product={{ id: it.id, label: it.label, category: it.category, iconKey: it.iconKey, platform: it.platform }}
+                product={{ id: it.id, label: it.label, category: it.category, iconKey: it.iconKey, platform: it.platform, pos: it.pos }}
               />
             ))}
           </div>

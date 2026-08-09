@@ -3,11 +3,13 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Fuse from "fuse.js";
-import { ArrowUpRight, Search, X } from "lucide-react";
+import { ArrowUpRight, ChevronDown, Search, X } from "lucide-react";
 
 import { ProductRow } from "@/components/product-row";
 import { categoryOptions, getIcon, platformLabel, type PlatformKey } from "@/lib/icons";
 import type { Product } from "@/lib/data";
+
+const PAGE_SIZE = 20;
 
 type IndexItem = {
   id: string;
@@ -32,11 +34,17 @@ export function ProductGallery({
 }) {
   const [query, setQuery] = useState("");
   const [debounced, setDebounced] = useState("");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   useEffect(() => {
     const t = setTimeout(() => setDebounced(query), 180);
     return () => clearTimeout(t);
   }, [query]);
+
+  // Reset pagination when category or search changes
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [activeCategory, debounced]);
 
   const indexItems = useMemo<IndexItem[]>(
     () =>
@@ -52,8 +60,6 @@ export function ProductGallery({
     [products]
   );
 
-  // Penomoran DINAMIS: pos = urutan 1..N pada daftar yang tampil (produk nonaktif
-  // sudah tidak ikut dari getPublicProducts), jadi tidak pernah loncat.
   const byCategory = useMemo(
     () =>
       (activeCategory === "all"
@@ -67,8 +73,6 @@ export function ProductGallery({
     const q = debounced.trim();
     if (!q) return byCategory;
 
-    // Jika pencarian berupa angka murni (1-3 digit), cari produk dengan nomor urut exact terlebih dahulu.
-    // Jika tidak cocok dengan nomor urut, baru sertakan dalam pencarian Fuse.js
     const numeric = /^\d{1,3}$/.test(q) ? parseInt(q, 10) : null;
     if (numeric !== null) {
       const positional = byCategory.filter((it) => it.pos === numeric);
@@ -88,8 +92,14 @@ export function ProductGallery({
     return fuse.search(q).map((r) => r.item);
   }, [debounced, byCategory]);
 
+  const visibleResults = useMemo(
+    () => results.slice(0, visibleCount),
+    [results, visibleCount]
+  );
+
   const hasQuery = debounced.trim().length > 0;
   const empty = results.length === 0;
+  const hasMore = visibleCount < results.length;
 
   return (
     <div className="flex w-full flex-col gap-4">
@@ -132,7 +142,7 @@ export function ProductGallery({
         <>
           {/* List mobile */}
           <div className="flex flex-col gap-3.5 lg:hidden">
-            {results.map((it) => (
+            {visibleResults.map((it) => (
               <ProductRow
                 key={it.id}
                 product={{ id: it.id, label: it.label, category: it.category, iconKey: it.iconKey, platform: it.platform }}
@@ -142,7 +152,7 @@ export function ProductGallery({
 
           {/* Grid desktop */}
           <div className="hidden grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 lg:grid">
-            {results.map((it) => {
+            {visibleResults.map((it) => {
               const Icon = getIcon(it.iconKey);
               return (
                 <Link
@@ -173,6 +183,23 @@ export function ProductGallery({
               );
             })}
           </div>
+
+          {/* Load More Button for 100+ items */}
+          {hasMore && (
+            <div className="mt-4 flex flex-col items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
+                className="flex items-center gap-2 rounded-2xl border border-indigo-200 bg-indigo-50 px-6 py-3 text-[14px] font-bold text-indigo-600 shadow-sm transition-all hover:bg-indigo-600 hover:text-white hover:shadow-md active:scale-98"
+              >
+                <span>Tampilkan Lebih Banyak ({results.length - visibleCount} produk tersisa)</span>
+                <ChevronDown className="h-4 w-4" aria-hidden="true" />
+              </button>
+              <p className="text-[12px] font-semibold text-slate-400">
+                Menampilkan {visibleResults.length} dari {results.length} produk
+              </p>
+            </div>
+          )}
         </>
       )}
     </div>

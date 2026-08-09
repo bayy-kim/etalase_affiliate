@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   ArrowLeft,
+  BookOpen,
   LayoutDashboard,
   LogOut,
   Package,
@@ -24,6 +25,7 @@ const NAV = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/products", label: "Products", icon: Package },
   { href: "/admin/earnings", label: "Earnings", icon: Wallet },
+  { href: "/admin/guide", label: "Panduan Admin", icon: BookOpen },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 

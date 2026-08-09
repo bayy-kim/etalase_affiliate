@@ -219,11 +219,11 @@ const mockAudit: AuditEntry[] = [];
  * ======================================================================== */
 
 const PROFILE_DEFAULTS: Profile = {
-  handle: process.env.ADMIN_HANDLE ?? "@namatiktokkamu",
-  displayName: process.env.ADMIN_DISPLAY_NAME ?? "Etalase Affiliate",
-  bio: "Curating the best finds for your daily life.",
-  avatar: null,
-  link: "https://vt.tokopedia.com",
+  handle: process.env.ADMIN_HANDLE ?? "@abny2524",
+  displayName: process.env.ADMIN_DISPLAY_NAME ?? "abny",
+  bio: "rekomendasi outfit cowo ‼️\ncek keranjang kuning / link di bawah 👇🏻",
+  avatar: "https://p16-sign-va.tiktokcdn.com/tos-maliva-avt-0068/7321528659132219438~c5_1080x1080.jpeg",
+  link: "https://www.tiktok.com/@abny2524",
 };
 
 export async function getProfile(): Promise<Profile> {

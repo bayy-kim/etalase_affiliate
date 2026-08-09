@@ -541,25 +541,35 @@ export async function getTotalClicks(): Promise<number> {
 
 export type TrendDelta = { current: number; previous: number; deltaPct: number | null };
 
-/** Bandingkan total klik N hari terakhir vs N hari sebelumnya. */
+/** Bandingkan total klik N hari terakhir vs N hari sebelumnya — 1 scan saja. */
 export async function getClickDelta(days = 7): Promise<TrendDelta> {
-  const current = await getClickTrend(days);
-  const prevStart = new Date();
-  prevStart.setHours(0, 0, 0, 0);
-  prevStart.setDate(prevStart.getDate() - (days * 2 - 1));
-  const prevEnd = new Date(prevStart);
-  prevEnd.setDate(prevStart.getDate() + days);
+  const endToday = new Date();
+  endToday.setHours(23, 59, 59, 999);
+  const start = new Date(endToday);
+  start.setDate(start.getDate() - (days * 2 - 1));
+  start.setHours(0, 0, 0, 0);
 
-  let prevCount: number;
+  // Ambil klik dalam rentang 2×N hari sekali, lalu bagi jadi window sekarang & sebelumnya.
+  let rows: { createdAt: Date }[];
   if (isDb()) {
-    prevCount = await prisma.clickLog.count({
-      where: { createdAt: { gte: prevStart, lt: prevEnd } },
+    rows = await prisma.clickLog.findMany({
+      where: { createdAt: { gte: start } },
+      select: { createdAt: true },
     });
   } else {
-    prevCount = mockClicks.filter((c) => c.createdAt >= prevStart && c.createdAt < prevEnd).length;
+    rows = mockClicks.filter((c) => c.createdAt >= start);
   }
 
-  const currentCount = current.reduce((s, d) => s + d.clicks, 0);
+  const mid = new Date(start);
+  mid.setDate(mid.getDate() + days);
+
+  let currentCount = 0;
+  let prevCount = 0;
+  for (const c of rows) {
+    if (c.createdAt < mid) prevCount += 1;
+    else currentCount += 1;
+  }
+
   const deltaPct =
     prevCount === 0 ? (currentCount > 0 ? 100 : null) : ((currentCount - prevCount) / prevCount) * 100;
   return { current: currentCount, previous: prevCount, deltaPct };

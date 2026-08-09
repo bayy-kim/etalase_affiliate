@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { default as NextDynamic } from "next/dynamic";
 import {
   Package,
   MousePointerClick,
@@ -11,7 +12,6 @@ import {
 import { AdminShell } from "@/components/admin-shell";
 import { StatCard } from "@/components/stat-card";
 import { ClickTrendCard } from "@/components/click-trend-card";
-import { PlatformBarChart } from "@/components/dashboard-charts";
 import {
   getAllProducts,
   getClickTrend,
@@ -21,6 +21,16 @@ import {
 } from "@/lib/data";
 import { formatNumber, formatRupiah, formatRupiahCompact } from "@/lib/format";
 import { platformLabel, type PlatformKey } from "@/lib/icons";
+
+// Recharts dimuat on-demand supaya bundle dashboard tidak menahan navigasi.
+const PlatformBarChart = NextDynamic(
+  () => import("@/components/dashboard-charts").then((m) => m.PlatformBarChart),
+  {
+    loading: () => (
+      <div className="h-full w-full animate-pulse rounded-xl bg-surface-variant" aria-hidden="true" />
+    ),
+  }
+);
 
 export const dynamic = "force-dynamic";
 

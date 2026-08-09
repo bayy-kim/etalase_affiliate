@@ -1,9 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 
-import { ClickTrendChart } from "@/components/dashboard-charts";
 import { cn } from "@/lib/utils";
+
+const ClickTrendChart = dynamic(
+  () => import("@/components/dashboard-charts").then((m) => m.ClickTrendChart),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-full w-full animate-pulse rounded-xl bg-surface-variant" aria-hidden="true" />
+    ),
+  }
+);
 
 export function ClickTrendCard({
   trend7,

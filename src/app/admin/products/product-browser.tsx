@@ -111,52 +111,54 @@ export function ProductBrowser({ products }: { products: Product[] }) {
               <div
                 key={product.id}
                 className={cn(
-                  "flex flex-col gap-4 rounded-2xl border border-border-subtle bg-surface-card p-4 transition-colors",
-                  product.isActive ? "" : "opacity-75"
+                  "flex flex-col gap-4 rounded-3xl border border-slate-200/80 bg-white p-5 shadow-clay-card transition-all duration-200 hover:-translate-y-1 hover:shadow-lg",
+                  product.isActive ? "" : "opacity-60"
                 )}
               >
                 <div className="flex items-start gap-4">
                   <span
                     className={cn(
-                      "flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-border-subtle bg-background-base",
-                      product.isActive ? "text-text-primary" : "text-text-secondary"
+                      "flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border-t border-white border-b border-indigo-200/60 shadow-[0_6px_14px_-3px_rgba(99,102,241,0.25)] transition-transform duration-200 group-hover:scale-105",
+                      product.isActive
+                        ? "bg-gradient-to-b from-indigo-100 to-indigo-200/90 text-indigo-600"
+                        : "bg-slate-100 text-slate-400 border-slate-200 shadow-none"
                     )}
                   >
-                    <Icon className="h-7 w-7" aria-hidden="true" />
+                    <Icon className="h-6 w-6" aria-hidden="true" />
                   </span>
                   <div className="min-w-0 flex-1">
                     <h3
                       className={cn(
-                        "truncate text-[18px] font-[600] leading-6 tracking-[-0.01em]",
-                        product.isActive ? "text-on-surface" : "text-text-secondary"
+                        "truncate text-[16px] font-bold leading-6 tracking-tight",
+                        product.isActive ? "text-slate-900" : "text-slate-500"
                       )}
                     >
                       {product.label}
                     </h3>
                     <div className="mt-1.5 flex flex-wrap items-center gap-2">
-                      <span className="inline-block rounded-full border border-border-subtle bg-surface-container px-2 py-0.5 text-[10px] font-[600] uppercase tracking-[0.05em] text-text-secondary">
+                      <span className="inline-block rounded-full border border-indigo-100 bg-indigo-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-600">
                         {platformUppercase[product.platform]}
                       </span>
-                      <span className="text-[11px] font-[600] uppercase tracking-[0.05em] text-text-secondary">
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
                         {categorySelectOptions.find((c) => c.value === product.category)?.label ?? product.category}
                       </span>
                     </div>
                     {income > 0 ? (
-                      <p className="mt-1 text-[14px] font-[600] text-secondary">
+                      <p className="mt-2 text-[13px] font-bold text-emerald-600">
                         Pendapatan: {formatRupiah(income)}
                       </p>
                     ) : (
-                      <p className="mt-1 text-[14px] font-[600] text-text-secondary">
+                      <p className="mt-2 text-[13px] font-medium text-slate-400">
                         Belum ada pendapatan
                       </p>
                     )}
                   </div>
                 </div>
 
-                <div className="mt-auto flex items-center justify-between border-t border-border-subtle pt-4">
-                  <span className="flex items-center gap-1.5 text-[14px] text-text-secondary">
-                    <MousePointerClick className="h-4 w-4" aria-hidden="true" />
-                    {formatNumber(product.clickCount)} klik
+                <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-3.5">
+                  <span className="flex items-center gap-1.5 text-[13px] font-medium text-slate-500">
+                    <MousePointerClick className="h-4 w-4 text-indigo-500" aria-hidden="true" />
+                    <strong className="text-slate-800 font-bold">{formatNumber(product.clickCount)}</strong> klik
                   </span>
                   <ProductActions
                     product={{ id: product.id, label: product.label, isActive: product.isActive }}

@@ -19,7 +19,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Navigasi admin"
-      className="fixed bottom-0 left-1/2 z-50 flex h-16 w-full max-w-[480px] -translate-x-1/2 items-center justify-around border-t border-border-subtle bg-surface-container px-4 pb-[max(env(safe-area-inset-bottom),0px)] lg:hidden"
+      className="fixed bottom-4 left-4 right-4 z-40 flex h-16 max-w-[480px] mx-auto items-center justify-around rounded-full border border-slate-200/80 bg-white/90 px-3 shadow-clay backdrop-blur-lg lg:hidden"
     >
       {items.map((item) => {
         const active = pathname.startsWith(item.href);
@@ -30,12 +30,14 @@ export function BottomNav() {
             href={item.href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "flex h-full w-16 flex-col items-center justify-center gap-1 rounded-lg transition-transform hover:bg-surface-bright active:scale-90",
-              active ? "font-bold text-primary" : "text-on-surface-variant"
+              "flex h-12 w-16 flex-col items-center justify-center gap-0.5 rounded-full transition-all active:scale-95",
+              active
+                ? "bg-indigo-50 text-indigo-600 font-bold shadow-sm"
+                : "text-slate-500 hover:text-slate-900"
             )}
           >
-            <Icon className={cn("h-6 w-6", active && "fill-primary/20")} aria-hidden="true" />
-            <span className="text-[12px] font-[600] leading-4">{item.label}</span>
+            <Icon className={cn("h-5 w-5", active && "text-indigo-600")} aria-hidden="true" />
+            <span className="text-[11px] font-semibold leading-3">{item.label}</span>
           </Link>
         );
       })}

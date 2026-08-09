@@ -19,30 +19,30 @@ export function ProductRow({ product }: { product: ProductRowData }) {
 
   return (
     <motion.div
-      whileHover={{ x: 2 }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ type: "spring", stiffness: 400, damping: 28 }}
+      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.985 }}
+      transition={{ type: "spring", stiffness: 450, damping: 25 }}
     >
       <Link
         href={`/go/${product.id}`}
         prefetch={false}
-        className="group flex items-center justify-between rounded-2xl border border-border-subtle bg-surface-card p-4 transition-colors hover:bg-surface-variant focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container"
+        className="group flex items-center justify-between rounded-3xl border border-slate-200/80 bg-white p-4.5 shadow-clay-card transition-all duration-200 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
       >
         <span className="flex min-w-0 items-center gap-4">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-border-subtle bg-background-base text-text-primary transition-colors group-hover:border-primary-container">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-t border-white border-b border-indigo-200/60 bg-gradient-to-b from-indigo-100 to-indigo-200/90 text-indigo-600 shadow-[0_6px_14px_-3px_rgba(99,102,241,0.25)] transition-all duration-200 group-hover:scale-105 group-hover:from-indigo-600 group-hover:to-indigo-700 group-hover:text-white group-hover:shadow-[0_8px_18px_-3px_rgba(99,102,241,0.4)]">
             <Icon className="h-5 w-5" aria-hidden="true" />
           </span>
           <span className="flex min-w-0 flex-col">
-            <span className="truncate text-[15px] font-[600] leading-5 text-text-primary">
+            <span className="truncate text-[15px] font-bold leading-5 text-slate-800 transition-colors group-hover:text-indigo-600">
               {product.label}
             </span>
-            <span className="mt-1 text-[12px] font-[600] uppercase tracking-[0.05em] leading-4 text-text-secondary">
+            <span className="mt-1 text-[11px] font-bold uppercase tracking-wider text-slate-400">
               {platformUppercase[product.platform]}
             </span>
           </span>
         </span>
         <ChevronRight
-          className="ml-4 h-5 w-5 shrink-0 text-text-secondary transition-colors group-hover:text-primary"
+          className="ml-3 h-5 w-5 shrink-0 text-slate-400 transition-all group-hover:translate-x-0.5 group-hover:text-indigo-600"
           aria-hidden="true"
         />
       </Link>

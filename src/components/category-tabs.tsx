@@ -11,6 +11,7 @@ export function CategoryTabs({ active }: { active: string }) {
   const pathname = usePathname();
 
   const select = (value: string) => {
+    if (value === active) return;
     const params = new URLSearchParams();
     if (value !== "all") params.set("k", value);
     const qs = params.toString();
@@ -23,7 +24,7 @@ export function CategoryTabs({ active }: { active: string }) {
     <div
       role="tablist"
       aria-label="Filter kategori"
-      className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 py-2"
+      className="no-scrollbar -mx-1 flex gap-2.5 overflow-x-auto px-1 py-2"
     >
       {tabs.map((tab) => {
         const isActive = active === tab.value;
@@ -35,16 +36,16 @@ export function CategoryTabs({ active }: { active: string }) {
             type="button"
             onClick={() => select(tab.value)}
             className={cn(
-              "relative shrink-0 rounded-full border px-5 py-2 text-[15px] font-[600] leading-5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container",
+              "relative shrink-0 rounded-2xl border px-5 py-2.5 text-[14px] font-bold leading-5 transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500",
               isActive
-                ? "border-primary-container bg-primary-container text-white"
-                : "border-border-subtle bg-transparent text-text-secondary hover:bg-surface-card"
+                ? "border-indigo-600 bg-indigo-600 text-white shadow-md shadow-indigo-500/25"
+                : "border-slate-200/80 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 shadow-sm"
             )}
           >
             {isActive && (
               <motion.span
                 layoutId="category-pill"
-                className="absolute top-0 right-0 bottom-0 left-0 rounded-full bg-primary-container"
+                className="absolute inset-0 rounded-2xl bg-indigo-600"
                 transition={{ type: "spring", stiffness: 500, damping: 35 }}
                 aria-hidden="true"
               />

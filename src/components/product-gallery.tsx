@@ -67,7 +67,8 @@ export function ProductGallery({
     const q = debounced.trim();
     if (!q) return byCategory;
 
-    // Angka = posisi dinamis di etalase (1-based, sesuai nomor yang tampil)
+    // Jika pencarian berupa angka murni (1-3 digit), cari produk dengan nomor urut exact terlebih dahulu.
+    // Jika tidak cocok dengan nomor urut, baru sertakan dalam pencarian Fuse.js
     const numeric = /^\d{1,3}$/.test(q) ? parseInt(q, 10) : null;
     if (numeric !== null) {
       const positional = byCategory.filter((it) => it.pos === numeric);
@@ -82,7 +83,7 @@ export function ProductGallery({
       ],
       threshold: 0.4,
       ignoreLocation: true,
-      minMatchCharLength: 2,
+      minMatchCharLength: 1,
     });
     return fuse.search(q).map((r) => r.item);
   }, [debounced, byCategory]);
@@ -91,11 +92,11 @@ export function ProductGallery({
   const empty = results.length === 0;
 
   return (
-    <div className="flex w-full flex-col gap-3">
+    <div className="flex w-full flex-col gap-4">
       {/* Search */}
       <div role="search" aria-label="Cari produk" className="relative">
         <Search
-          className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-text-secondary"
+          className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
           aria-hidden="true"
         />
         <input
@@ -103,14 +104,14 @@ export function ProductGallery({
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Cari produk… (ketik angka untuk cari urutan)"
-          className="h-12 w-full rounded-xl border border-border-subtle bg-surface-card pl-12 pr-12 text-[15px] text-text-primary transition-colors placeholder:text-text-secondary focus:border-primary-container focus:outline-none focus:ring-1 focus:ring-primary-container"
+          className="h-13 w-full rounded-2xl border border-slate-200/80 bg-white pl-12 pr-12 text-[15px] font-medium text-slate-800 shadow-sm transition-all placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/10"
         />
         {hasQuery && (
           <button
             type="button"
             onClick={() => setQuery("")}
             aria-label="Hapus pencarian"
-            className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-text-secondary transition-colors hover:text-text-primary"
+            className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-slate-400 transition-colors hover:text-slate-700"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
@@ -118,19 +119,19 @@ export function ProductGallery({
       </div>
 
       {hasQuery && (
-        <p className="text-[13px] text-text-secondary" aria-live="polite">
+        <p className="text-[13px] font-semibold text-slate-500" aria-live="polite">
           {empty ? "Tidak ditemukan." : `${results.length} hasil`}
         </p>
       )}
 
       {empty ? (
-        <p className="rounded-2xl border border-border-subtle bg-surface-card p-6 text-center text-[14px] text-text-secondary">
+        <p className="rounded-3xl border border-slate-200/80 bg-white p-8 text-center text-[14px] text-slate-500 shadow-clay-card">
           Tidak ditemukan — coba kata kunci lain atau hapus pencarian.
         </p>
       ) : (
         <>
           {/* List mobile */}
-          <div className="flex flex-col gap-3 lg:hidden">
+          <div className="flex flex-col gap-3.5 lg:hidden">
             {results.map((it) => (
               <ProductRow
                 key={it.id}
@@ -140,7 +141,7 @@ export function ProductGallery({
           </div>
 
           {/* Grid desktop */}
-          <div className="hidden grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-4 lg:grid">
+          <div className="hidden grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 lg:grid">
             {results.map((it) => {
               const Icon = getIcon(it.iconKey);
               return (
@@ -148,24 +149,24 @@ export function ProductGallery({
                   key={it.id}
                   href={`/go/${it.id}`}
                   prefetch={false}
-                  className="group flex items-center gap-4 rounded-xl border border-border-subtle bg-surface-card p-4 transition-colors hover:border-primary-container focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container"
+                  className="group flex items-center gap-4 rounded-3xl border border-slate-200/80 bg-white p-4.5 shadow-clay-card transition-all duration-200 hover:-translate-y-1 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
                 >
-                  <span className="text-[20px] font-[600] leading-7 tracking-[-0.01em] text-primary">
+                  <span className="font-mono text-[16px] font-extrabold text-indigo-600">
                     {String(it.pos).padStart(2, "0")}
                   </span>
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border-subtle bg-background-base text-text-primary">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-t border-white border-b border-indigo-200/60 bg-gradient-to-b from-indigo-100 to-indigo-200/90 text-indigo-600 shadow-[0_6px_14px_-3px_rgba(99,102,241,0.25)] transition-all duration-200 group-hover:scale-105 group-hover:from-indigo-600 group-hover:to-indigo-700 group-hover:text-white group-hover:shadow-[0_8px_18px_-3px_rgba(99,102,241,0.4)]">
                     <Icon className="h-5 w-5" aria-hidden="true" />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[16px] font-bold leading-6 text-text-primary">
+                    <span className="block truncate text-[15px] font-bold leading-5 text-slate-800 transition-colors group-hover:text-indigo-600">
                       {it.label}
                     </span>
-                    <span className="text-[12px] font-[600] uppercase tracking-[0.05em] text-text-secondary">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
                       {platformLabel[it.platform]}
                     </span>
                   </span>
                   <ArrowUpRight
-                    className="h-5 w-5 shrink-0 text-text-secondary transition-colors group-hover:text-primary"
+                    className="h-5 w-5 shrink-0 text-slate-400 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-indigo-600"
                     aria-hidden="true"
                   />
                 </Link>

@@ -31,12 +31,12 @@ export function ClickTrendCard({
   ];
 
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border border-border-subtle bg-surface-card p-4 lg:col-span-2 lg:p-6">
+    <div className="flex flex-col gap-4 rounded-3xl border border-slate-200/80 bg-white p-5 shadow-clay-card lg:col-span-2 lg:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-[20px] font-[600] leading-7 tracking-[-0.01em] text-on-surface">
-          Click Trend ({range} Hari)
+        <h2 className="text-[20px] font-extrabold tracking-tight text-slate-900">
+          Tren Klik ({range} Hari)
         </h2>
-        <div role="group" aria-label="Rentang waktu" className="flex gap-1 rounded-full border border-border-subtle bg-surface-container p-1">
+        <div role="group" aria-label="Rentang waktu" className="flex gap-1 rounded-2xl border border-slate-200/80 bg-slate-50 p-1">
           {pills.map((p) => (
             <button
               key={p.value}
@@ -44,10 +44,10 @@ export function ClickTrendCard({
               onClick={() => setRange(p.value)}
               aria-pressed={range === p.value}
               className={cn(
-                "rounded-full px-3 py-1 text-[12px] font-[600] transition-colors",
+                "rounded-xl px-3.5 py-1 text-[12px] font-bold transition-all",
                 range === p.value
-                  ? "bg-primary-container text-white"
-                  : "text-text-secondary hover:text-on-surface"
+                  ? "bg-white text-indigo-600 shadow-sm"
+                  : "text-slate-500 hover:text-slate-800"
               )}
             >
               {p.label}
@@ -55,7 +55,7 @@ export function ClickTrendCard({
           ))}
         </div>
       </div>
-      <div className="relative h-52 w-full lg:h-64">
+      <div className="relative h-56 w-full lg:h-64">
         <ClickTrendChart data={data} />
       </div>
     </div>

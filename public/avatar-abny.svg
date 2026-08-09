@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="256" fill="#000000" />
+  <circle cx="256" cy="256" r="232" fill="none" stroke="#ffffff" stroke-width="6" />
+  <g transform="translate(18, 12)">
+    <!-- 3D Extrusion Layer (White) -->
+    <path d="M 200 140 
+             L 245 140 
+             C 290 140, 320 155, 320 188 
+             C 320 210, 305 226, 280 234 
+             C 312 244, 332 268, 332 304 
+             C 332 348, 290 366, 235 366 
+             L 200 366 Z" 
+          fill="#ffffff" 
+          transform="translate(18, 18)" />
+    
+    <!-- Dark Shadow Block -->
+    <path d="M 195 140 
+             L 240 140 
+             C 285 140, 315 155, 315 188 
+             C 315 210, 300 226, 275 234 
+             C 307 244, 327 268, 327 304 
+             C 327 348, 285 366, 230 366 
+             L 195 366 Z" 
+          fill="#000000" 
+          transform="translate(6, 6)" />
+
+    <!-- Main Front 3D B (Black fill, thick White stroke / outline) -->
+    <path d="M 190 140 
+             L 235 140 
+             C 280 140, 310 155, 310 188 
+             C 310 208, 295 224, 270 232 
+             C 302 242, 322 265, 322 300 
+             C 322 344, 280 362, 225 362 
+             L 190 362 Z" 
+          fill="#000000" 
+          stroke="#ffffff" 
+          stroke-width="14" 
+          stroke-linejoin="round" 
+          stroke-linecap="round" />
+
+    <!-- Inner Counters (White cutouts inside B) -->
+    <!-- Top Counter Hole -->
+    <path d="M 226 172 
+             L 242 172 
+             C 264 172, 276 180, 276 193 
+             C 276 206, 264 214, 242 214 
+             L 226 214 Z" 
+          fill="#ffffff" 
+          stroke="#ffffff" 
+          stroke-width="3" 
+          stroke-linejoin="round" />
+
+    <!-- Bottom Counter Hole -->
+    <path d="M 226 254 
+             L 246 254 
+             C 272 254, 286 264, 286 283 
+             C 286 302, 272 312, 246 312 
+             L 226 312 Z" 
+          fill="#ffffff" 
+          stroke="#ffffff" 
+          stroke-width="3" 
+          stroke-linejoin="round" />
+  </g>
+</svg>

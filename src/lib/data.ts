@@ -222,7 +222,7 @@ const PROFILE_DEFAULTS: Profile = {
   handle: process.env.ADMIN_HANDLE ?? "@abny2524",
   displayName: process.env.ADMIN_DISPLAY_NAME ?? "abny",
   bio: "Kurasi & Rekomendasi Produk Pilihan Terbaik 🛍️\nTemukan penawaran terbaik untuk outfit, gadget, & kebutuhan harian. Tap produk untuk checkout langsung di platform resmi.",
-  avatar: "/avatar-abny.jpg",
+  avatar: "/avatar-abny.svg",
   link: "https://www.tiktok.com/@abny2524",
 };
 

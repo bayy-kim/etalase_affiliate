@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Platform {
+  TIKTOK_SHOP
+  SHOPEE
+}
+
+model Product {
+  id           String         @id @default(cuid())
+  label        String
+  internalNote String?
+  category     String
+  iconKey      String         @default("sparkles")
+  platform     Platform
+  affiliateUrl String
+  priceMin     Int?
+  priceMax     Int?
+  isActive     Boolean        @default(true)
+  sortOrder    Int            @default(0)
+  clicks       ClickLog[]
+  earnings     EarningEntry[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([isActive, sortOrder])
+  @@index([category])
+  @@index([platform])
+}
+
+model ClickLog {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([productId, createdAt])
+}
+
+model EarningEntry {
+  id         String    @id @default(cuid())
+  productId  String?
+  product    Product?  @relation(fields: [productId], references: [id], onDelete: SetNull)
+  platform   Platform
+  amount     Int
+  periodDate DateTime
+  note       String?
+  createdAt  DateTime  @default(now())
+
+  @@index([platform, periodDate])
+  @@index([productId])
+}
+
+model AdminUser {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  totpSecret   String?
+  totpEnabled  Boolean   @default(false)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  logs         AuditLog[]
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  adminId    String
+  admin      AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  action     String
+  targetType String
+  targetId   String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([adminId, createdAt])
+}

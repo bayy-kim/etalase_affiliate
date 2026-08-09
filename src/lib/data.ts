@@ -382,7 +382,6 @@ export async function getProduct(id: string): Promise<Product | null> {
         id: true, label: true, internalNote: true, category: true, iconKey: true,
         platform: true, affiliateUrl: true, income: true,
         isActive: true, sortOrder: true, createdAt: true, updatedAt: true,
-        _count: { select: { clicks: true } },
       },
     });
     if (!r) return null;
@@ -391,7 +390,7 @@ export async function getProduct(id: string): Promise<Product | null> {
       iconKey: r.iconKey, platform: r.platform as PlatformKey, affiliateUrl: r.affiliateUrl,
       income: r.income, isActive: r.isActive, sortOrder: r.sortOrder,
       createdAt: toIso(r.createdAt), updatedAt: toIso(r.updatedAt),
-      clicks: r._count.clicks,
+      clicks: 0,
     });
   }
 

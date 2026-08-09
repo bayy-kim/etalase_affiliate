@@ -29,7 +29,9 @@ export async function GET(
     new URL(_req.url).searchParams.has("_rsc");
 
   if (!isPrefetch) {
-    await recordClick(productId);
+    // Non-blocking fire-and-forget click recording:
+    // Pengunjung langsung di-redirect tanpa perlu menunggu query INSERT ke database selesai.
+    recordClick(productId).catch(() => {});
   }
 
   const res = NextResponse.redirect(product.affiliateUrl, 302);

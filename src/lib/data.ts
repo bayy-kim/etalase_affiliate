@@ -16,12 +16,10 @@ export type Product = {
   iconKey: string;
   platform: PlatformKey;
   affiliateUrl: string;
-  priceMin: number | null;
-  priceMax: number | null;
+  income: number | null;
   isActive: boolean;
   sortOrder: number;
   clickCount: number;
-  earningsTotal: number;
   createdAt: string;
   updatedAt: string;
 };
@@ -91,8 +89,7 @@ type MockProduct = {
   iconKey: string;
   platform: PlatformKey;
   affiliateUrl: string;
-  priceMin: number | null;
-  priceMax: number | null;
+  income: number | null;
   isActive: boolean;
   sortOrder: number;
   createdAt: Date;
@@ -108,8 +105,7 @@ const mockProducts: MockProduct[] = [
     iconKey: "sparkles",
     platform: "TIKTOK_SHOP" as PlatformKey,
     affiliateUrl: "https://vt.tokopedia.com/etalase-skincare",
-    priceMin: 45000,
-    priceMax: 120000,
+    income: 45000,
     isActive: true,
     sortOrder: 0,
     createdAt: daysAgo(30),
@@ -123,8 +119,7 @@ const mockProducts: MockProduct[] = [
     iconKey: "smartphone",
     platform: "SHOPEE" as PlatformKey,
     affiliateUrl: "https://shopee.co.id/etalase-gadget",
-    priceMin: 99000,
-    priceMax: 350000,
+    income: 99000,
     isActive: true,
     sortOrder: 1,
     createdAt: daysAgo(28),
@@ -138,8 +133,7 @@ const mockProducts: MockProduct[] = [
     iconKey: "shirt",
     platform: "TIKTOK_SHOP" as PlatformKey,
     affiliateUrl: "https://vt.tokopedia.com/etalase-fashion",
-    priceMin: 75000,
-    priceMax: 180000,
+    income: 75000,
     isActive: true,
     sortOrder: 2,
     createdAt: daysAgo(20),
@@ -153,8 +147,7 @@ const mockProducts: MockProduct[] = [
     iconKey: "home",
     platform: "SHOPEE" as PlatformKey,
     affiliateUrl: "https://shopee.co.id/etalase-rumah",
-    priceMin: 15000,
-    priceMax: 60000,
+    income: 15000,
     isActive: true,
     sortOrder: 3,
     createdAt: daysAgo(15),
@@ -168,8 +161,7 @@ const mockProducts: MockProduct[] = [
     iconKey: "favorite",
     platform: "TIKTOK_SHOP" as PlatformKey,
     affiliateUrl: "https://vt.tokopedia.com/etalase-lip",
-    priceMin: 89000,
-    priceMax: 89000,
+    income: 89000,
     isActive: false,
     sortOrder: 4,
     createdAt: daysAgo(12),
@@ -183,8 +175,7 @@ const mockProducts: MockProduct[] = [
     iconKey: "headphones",
     platform: "TIKTOK_SHOP" as PlatformKey,
     affiliateUrl: "https://vt.tokopedia.com/etalase-earbuds",
-    priceMin: 199000,
-    priceMax: 199000,
+    income: 199000,
     isActive: true,
     sortOrder: 5,
     createdAt: daysAgo(10),
@@ -233,17 +224,55 @@ const mockAdmin = (): AdminUser => ({
 });
 
 /* =========================================================================
- * Profile (static di MVP, sesuai PRD Fase 3)
+ * Profile — disimpan di DB (ProfileSetting), fallback env untuk default
  * ======================================================================== */
 
-export function getProfile(): Profile {
-  return {
-    handle: process.env.ADMIN_HANDLE ?? "@namatiktokkamu",
-    displayName: process.env.ADMIN_DISPLAY_NAME ?? "Etalase Affiliate",
-    bio: "Curating the best finds for your daily life.",
-    avatar: null,
-    link: "https://vt.tokopedia.com",
-  };
+const PROFILE_DEFAULTS: Profile = {
+  handle: process.env.ADMIN_HANDLE ?? "@namatiktokkamu",
+  displayName: process.env.ADMIN_DISPLAY_NAME ?? "Etalase Affiliate",
+  bio: "Curating the best finds for your daily life.",
+  avatar: null,
+  link: "https://vt.tokopedia.com",
+};
+
+export async function getProfile(): Promise<Profile> {
+  if (!isDb()) return PROFILE_DEFAULTS;
+
+  try {
+    const rows = await prisma.profileSetting.findMany();
+    const map = new Map(rows.map((r) => [r.key, r.value]));
+    return {
+      handle: map.get("handle") ?? PROFILE_DEFAULTS.handle,
+      displayName: map.get("displayName") ?? PROFILE_DEFAULTS.displayName,
+      bio: map.get("bio") ?? PROFILE_DEFAULTS.bio,
+      avatar: map.get("avatar") || null,
+      link: map.get("link") ?? PROFILE_DEFAULTS.link,
+    };
+  } catch {
+    return PROFILE_DEFAULTS;
+  }
+}
+
+export type ProfileInput = {
+  handle?: string;
+  displayName?: string;
+  bio?: string;
+  avatar?: string | null;
+  link?: string;
+};
+
+export async function saveProfile(input: ProfileInput): Promise<void> {
+  if (!isDb()) return;
+  const entries = Object.entries(input).filter(([, v]) => v !== undefined);
+  await prisma.$transaction(
+    entries.map(([key, value]) =>
+      prisma.profileSetting.upsert({
+        where: { key },
+        update: { value: value ?? "" },
+        create: { key, value: value ?? "" },
+      })
+    )
+  );
 }
 
 /* =========================================================================
@@ -258,14 +287,12 @@ type ProductRowInput = {
   iconKey: string;
   platform: PlatformKey;
   affiliateUrl: string;
-  priceMin: number | null;
-  priceMax: number | null;
+  income: number | null;
   isActive: boolean;
   sortOrder: number;
   createdAt: string;
   updatedAt: string;
   clicks: number;
-  earnings: number;
 };
 
 function toProduct(p: ProductRowInput): Product {
@@ -277,14 +304,12 @@ function toProduct(p: ProductRowInput): Product {
     iconKey: p.iconKey,
     platform: p.platform,
     affiliateUrl: p.affiliateUrl,
-    priceMin: p.priceMin,
-    priceMax: p.priceMax,
+    income: p.income,
     isActive: p.isActive,
     sortOrder: p.sortOrder,
     createdAt: p.createdAt,
     updatedAt: p.updatedAt,
     clickCount: p.clicks,
-    earningsTotal: p.earnings,
   };
 }
 
@@ -295,20 +320,18 @@ export async function getPublicProducts(): Promise<Product[]> {
       orderBy: { sortOrder: "asc" },
       select: {
         id: true, label: true, internalNote: true, category: true, iconKey: true,
-        platform: true, affiliateUrl: true, priceMin: true, priceMax: true,
+        platform: true, affiliateUrl: true, income: true,
         isActive: true, sortOrder: true, createdAt: true, updatedAt: true,
         _count: { select: { clicks: true } },
-        earnings: { select: { amount: true } },
       },
     });
     return rows.map((r) =>
       toProduct({
         id: r.id, label: r.label, internalNote: r.internalNote, category: r.category,
-        iconKey: r.iconKey, platform: r.platform as PlatformKey, affiliateUrl: r.affiliateUrl,
-        priceMin: r.priceMin, priceMax: r.priceMax, isActive: r.isActive, sortOrder: r.sortOrder,
+        iconKey: r.iconKey, platform: r.platform as PlatformKey, affiliateUrl: r.affiliateUrl, income: r.income,
+        isActive: r.isActive, sortOrder: r.sortOrder,
         createdAt: toIso(r.createdAt), updatedAt: toIso(r.updatedAt),
         clicks: r._count.clicks,
-        earnings: r.earnings.reduce((s, e) => s + e.amount, 0),
       })
     );
   }
@@ -322,7 +345,6 @@ export async function getPublicProducts(): Promise<Product[]> {
         createdAt: toIso(p.createdAt),
         updatedAt: toIso(p.updatedAt),
         clicks: mockClicks.filter((c) => c.productId === p.id).length,
-        earnings: mockEarnings.filter((e) => e.productId === p.id).reduce((s, e) => s + e.amount, 0),
       })
     );
 }
@@ -333,20 +355,18 @@ export async function getAllProducts(): Promise<Product[]> {
       orderBy: { sortOrder: "asc" },
       select: {
         id: true, label: true, internalNote: true, category: true, iconKey: true,
-        platform: true, affiliateUrl: true, priceMin: true, priceMax: true,
+        platform: true, affiliateUrl: true, income: true,
         isActive: true, sortOrder: true, createdAt: true, updatedAt: true,
         _count: { select: { clicks: true } },
-        earnings: { select: { amount: true } },
       },
     });
     return rows.map((r) =>
       toProduct({
         id: r.id, label: r.label, internalNote: r.internalNote, category: r.category,
-        iconKey: r.iconKey, platform: r.platform as PlatformKey, affiliateUrl: r.affiliateUrl,
-        priceMin: r.priceMin, priceMax: r.priceMax, isActive: r.isActive, sortOrder: r.sortOrder,
+        iconKey: r.iconKey, platform: r.platform as PlatformKey, affiliateUrl: r.affiliateUrl, income: r.income,
+        isActive: r.isActive, sortOrder: r.sortOrder,
         createdAt: toIso(r.createdAt), updatedAt: toIso(r.updatedAt),
         clicks: r._count.clicks,
-        earnings: r.earnings.reduce((s, e) => s + e.amount, 0),
       })
     );
   }
@@ -359,7 +379,6 @@ export async function getAllProducts(): Promise<Product[]> {
         createdAt: toIso(p.createdAt),
         updatedAt: toIso(p.updatedAt),
         clicks: mockClicks.filter((c) => c.productId === p.id).length,
-        earnings: mockEarnings.filter((e) => e.productId === p.id).reduce((s, e) => s + e.amount, 0),
       })
     );
 }
@@ -370,20 +389,18 @@ export async function getProduct(id: string): Promise<Product | null> {
       where: { id },
       select: {
         id: true, label: true, internalNote: true, category: true, iconKey: true,
-        platform: true, affiliateUrl: true, priceMin: true, priceMax: true,
+        platform: true, affiliateUrl: true, income: true,
         isActive: true, sortOrder: true, createdAt: true, updatedAt: true,
         _count: { select: { clicks: true } },
-        earnings: { select: { amount: true } },
       },
     });
     if (!r) return null;
     return toProduct({
       id: r.id, label: r.label, internalNote: r.internalNote, category: r.category,
       iconKey: r.iconKey, platform: r.platform as PlatformKey, affiliateUrl: r.affiliateUrl,
-      priceMin: r.priceMin, priceMax: r.priceMax, isActive: r.isActive, sortOrder: r.sortOrder,
+      income: r.income, isActive: r.isActive, sortOrder: r.sortOrder,
       createdAt: toIso(r.createdAt), updatedAt: toIso(r.updatedAt),
       clicks: r._count.clicks,
-      earnings: r.earnings.reduce((s, e) => s + e.amount, 0),
     });
   }
 
@@ -394,7 +411,6 @@ export async function getProduct(id: string): Promise<Product | null> {
     createdAt: toIso(p.createdAt),
     updatedAt: toIso(p.updatedAt),
     clicks: mockClicks.filter((c) => c.productId === p.id).length,
-    earnings: mockEarnings.filter((e) => e.productId === p.id).reduce((s, e) => s + e.amount, 0),
   });
 }
 
@@ -405,8 +421,7 @@ export type ProductInput = {
   iconKey: string;
   platform: PlatformKey;
   affiliateUrl: string;
-  priceMin?: number | null;
-  priceMax?: number | null;
+  income?: number | null;
   isActive?: boolean;
   sortOrder?: number;
 };
@@ -429,15 +444,14 @@ export async function createProduct(input: ProductInput): Promise<Product> {
     iconKey: input.iconKey,
     platform: input.platform,
     affiliateUrl: input.affiliateUrl,
-    priceMin: input.priceMin ?? null,
-    priceMax: input.priceMax ?? null,
+    income: input.income ?? null,
     isActive: input.isActive ?? true,
     sortOrder: input.sortOrder ?? maxOrder + 1,
     createdAt: now,
     updatedAt: now,
   };
   mockProducts.push(p);
-  return toProduct({ ...p, createdAt: toIso(p.createdAt), updatedAt: toIso(p.updatedAt), clicks: 0, earnings: 0 });
+  return toProduct({ ...p, createdAt: toIso(p.createdAt), updatedAt: toIso(p.updatedAt), clicks: 0 });
 }
 
 export async function updateProduct(id: string, input: ProductInput): Promise<Product | null> {
@@ -609,25 +623,35 @@ export async function listEarnings(): Promise<Earning[]> {
 
 export async function addEarning(input: EarningInput): Promise<Earning> {
   if (isDb()) {
-    const r = await prisma.earningEntry.create({
-      data: {
-        productId: input.productId ?? null,
-        platform: input.platform,
-        amount: input.amount,
-        periodDate: new Date(input.periodDate),
-        note: input.note ?? null,
-      },
-      include: { product: { select: { id: true, label: true } } },
+    const result = await prisma.$transaction(async (tx) => {
+      const r = await tx.earningEntry.create({
+        data: {
+          productId: input.productId ?? null,
+          platform: input.platform,
+          amount: input.amount,
+          periodDate: new Date(input.periodDate),
+          note: input.note ?? null,
+        },
+        include: { product: { select: { id: true, label: true } } },
+      });
+      // Sinkronkan "Pendapatan dari Produk" (income) dengan ledger earnings.
+      if (input.productId) {
+        await tx.product.update({
+          where: { id: input.productId },
+          data: { income: { increment: input.amount } },
+        });
+      }
+      return r;
     });
     return {
-      id: r.id,
-      productId: r.productId,
-      productLabel: r.product?.label ?? null,
-      platform: r.platform as PlatformKey,
-      amount: r.amount,
-      periodDate: toIso(r.periodDate),
-      note: r.note,
-      createdAt: toIso(r.createdAt),
+      id: result.id,
+      productId: result.productId,
+      productLabel: result.product?.label ?? null,
+      platform: result.platform as PlatformKey,
+      amount: result.amount,
+      periodDate: toIso(result.periodDate),
+      note: result.note,
+      createdAt: toIso(result.createdAt),
     };
   }
 
@@ -640,6 +664,10 @@ export async function addEarning(input: EarningInput): Promise<Earning> {
     note: input.note ?? null,
   };
   mockEarnings.push(entry);
+  if (entry.productId) {
+    const target = mockProducts.find((p) => p.id === entry.productId);
+    if (target) target.income = (target.income ?? 0) + entry.amount;
+  }
   const product = mockProducts.find((p) => p.id === entry.productId);
   return {
     id: entry.id,
@@ -656,7 +684,16 @@ export async function addEarning(input: EarningInput): Promise<Earning> {
 export async function deleteEarning(id: string): Promise<boolean> {
   if (isDb()) {
     try {
-      await prisma.earningEntry.delete({ where: { id } });
+      const entry = await prisma.earningEntry.findUnique({ where: { id } });
+      await prisma.$transaction(async (tx) => {
+        await tx.earningEntry.delete({ where: { id } });
+        if (entry?.productId) {
+          await tx.product.update({
+            where: { id: entry.productId },
+            data: { income: { decrement: entry.amount } },
+          });
+        }
+      });
       return true;
     } catch {
       return false;
@@ -664,7 +701,12 @@ export async function deleteEarning(id: string): Promise<boolean> {
   }
   const i = mockEarnings.findIndex((e) => e.id === id);
   if (i === -1) return false;
+  const removed = mockEarnings[i]!;
   mockEarnings.splice(i, 1);
+  if (removed.productId) {
+    const target = mockProducts.find((p) => p.id === removed.productId);
+    if (target) target.income = Math.max(0, (target.income ?? 0) - removed.amount);
+  }
   return true;
 }
 
@@ -810,4 +852,5 @@ export async function listAuditLogs(limit = 50): Promise<AuditEntry[]> {
   }
   return [...mockAudit].reverse().slice(0, limit);
 }
+
 

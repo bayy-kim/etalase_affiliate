@@ -20,8 +20,7 @@ model Product {
   iconKey      String         @default("sparkles")
   platform     Platform
   affiliateUrl String
-  priceMin     Int?
-  priceMax     Int?
+  income       Int? // Pendapatan dari produk (Rupiah, integer) — sinkron dengan EarningEntry
   isActive     Boolean        @default(true)
   sortOrder    Int            @default(0)
   clicks       ClickLog[]
@@ -66,6 +65,12 @@ model AdminUser {
   lastLoginAt  DateTime?
   createdAt    DateTime  @default(now())
   logs         AuditLog[]
+}
+
+model ProfileSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
 }
 
 model AuditLog {

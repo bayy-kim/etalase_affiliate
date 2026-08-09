@@ -13,8 +13,7 @@ export const productSchema = z.object({
     .trim()
     .min(1, "Link affiliate wajib diisi")
     .url("Link affiliate harus berupa URL yang valid"),
-  priceMin: z.coerce.number().int().min(0).max(1_000_000_000).nullable().optional(),
-  priceMax: z.coerce.number().int().min(0).max(1_000_000_000).nullable().optional(),
+  income: z.coerce.number().int().min(0).max(1_000_000_000).nullable().optional(),
   isActive: z.coerce.boolean().default(true),
   sortOrder: z.coerce.number().int().min(0).optional(),
 });

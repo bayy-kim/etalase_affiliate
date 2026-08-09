@@ -9,6 +9,7 @@ import {
   Package,
   Plus,
   Settings,
+  Store,
   Wallet,
 } from "lucide-react";
 import type { ReactNode } from "react";
@@ -85,6 +86,15 @@ export function AdminShell({
         </nav>
 
         <div className="mt-auto space-y-1 border-t border-border-subtle p-3">
+          <Link
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 rounded-xl px-3 py-3 text-[14px] font-[600] text-on-surface-variant transition-colors hover:bg-surface-container-highest hover:text-on-surface"
+          >
+            <Store className="h-5 w-5" aria-hidden="true" />
+            Link-in-Bio
+          </Link>
           <form action={logoutAction}>
             <button
               type="submit"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useActionState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Calendar, ChevronDown, CircleDollarSign, X } from "lucide-react";
@@ -33,6 +33,13 @@ export function EarningsSheet({
   const close = () => {
     onOpenChange(false);
   };
+
+  useEffect(() => {
+    if (state && "ok" in state && state.ok) {
+      setAmount("");
+      onOpenChange(false);
+    }
+  }, [state, onOpenChange]);
 
   const today = toDateInputValue(new Date());
 

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useActionState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Calendar,
   ChevronDown,
@@ -42,6 +43,8 @@ export function EarningsClient({
   };
 }) {
   const [open, setOpen] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+  const visibleEarnings = showAll ? earnings : earnings.slice(0, 5);
 
   return (
     <AdminShell
@@ -63,9 +66,17 @@ export function EarningsClient({
       <section className="flex flex-col gap-4 lg:hidden">
         <div className="flex items-center justify-between">
           <h2 className="text-[14px] leading-5 text-text-secondary">Riwayat Terbaru</h2>
-          <span className="text-[12px] font-[600] uppercase tracking-[0.05em] text-primary">Lihat Semua</span>
+          {earnings.length > 5 && (
+            <button
+              type="button"
+              onClick={() => setShowAll((v) => !v)}
+              className="text-[12px] font-[600] uppercase tracking-[0.05em] text-primary transition-colors hover:text-primary-fixed-dim"
+            >
+              {showAll ? "Tutup" : "Lihat Semua"}
+            </button>
+          )}
         </div>
-        <EarningList earnings={earnings} />
+        <EarningList earnings={visibleEarnings} />
       </section>
 
       {/* Desktop: bento */}
@@ -219,10 +230,18 @@ function SummaryCard({
 }
 
 function DesktopEarningForm({ products }: { products: { id: string; label: string }[] }) {
+  const router = useRouter();
   const [platform, setPlatform] = useState<PlatformKey>("TIKTOK_SHOP");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(() => toDateInputValue(new Date()));
   const [state, formAction, pending] = useActionState(addEarningAction, {});
+
+  useEffect(() => {
+    if (state && "ok" in state && state.ok) {
+      setAmount("");
+      router.refresh();
+    }
+  }, [state, router]);
 
   const err = state && "fieldErrors" in state ? state.fieldErrors : undefined;
 

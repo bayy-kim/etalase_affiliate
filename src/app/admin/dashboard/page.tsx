@@ -1,14 +1,17 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import {
   Package,
   MousePointerClick,
   CircleDollarSign,
   Gauge,
+  Store,
 } from "lucide-react";
 
 import { AdminShell } from "@/components/admin-shell";
 import { StatCard } from "@/components/stat-card";
-import { ClickTrendChart, PlatformBarChart } from "@/components/dashboard-charts";
+import { ClickTrendCard } from "@/components/click-trend-card";
+import { PlatformBarChart } from "@/components/dashboard-charts";
 import {
   getAllProducts,
   getClickTrend,
@@ -24,13 +27,15 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Dashboard" };
 
 export default async function DashboardPage() {
-  const [products, trend, clickDelta, earningsByPlatform, earningsDelta] = await Promise.all([
-    getAllProducts(),
-    getClickTrend(7),
-    getClickDelta(7),
-    getEarningsStats(),
-    getEarningsDelta(),
-  ]);
+  const [products, trend7, trend30, clickDelta, earningsByPlatform, earningsDelta] =
+    await Promise.all([
+      getAllProducts(),
+      getClickTrend(7),
+      getClickTrend(30),
+      getClickDelta(7),
+      getEarningsStats(),
+      getEarningsDelta(),
+    ]);
 
   const activeCount = products.filter((p) => p.isActive).length;
   const totalClicks = products.reduce((s, p) => s + p.clickCount, 0);
@@ -38,7 +43,21 @@ export default async function DashboardPage() {
   const avgClicks = activeCount > 0 ? Math.round(totalClicks / activeCount) : 0;
 
   return (
-    <AdminShell title="Dashboard" subtitle="Ringkasan performa etalase">
+    <AdminShell
+      title="Dashboard"
+      subtitle="Ringkasan performa etalase"
+      actions={
+        <Link
+          href="/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex h-11 w-11 items-center justify-center rounded-full border border-border-subtle bg-surface-card text-text-primary transition-colors hover:bg-surface-variant lg:h-10 lg:w-auto lg:gap-2 lg:rounded-xl lg:px-4 lg:text-[15px] lg:font-[600]"
+        >
+          <Store className="h-5 w-5" aria-hidden="true" />
+          <span className="hidden lg:inline">Lihat Katalog</span>
+        </Link>
+      }
+    >
       <div className="flex flex-col gap-6">
         {/* Stat cards */}
         <section
@@ -73,34 +92,7 @@ export default async function DashboardPage() {
 
         {/* Charts */}
         <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div
-            aria-labelledby="trend-heading"
-            className="flex flex-col gap-4 rounded-2xl border border-border-subtle bg-surface-card p-4 lg:col-span-2 lg:p-6"
-          >
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 id="trend-heading" className="text-[20px] font-[600] leading-7 tracking-[-0.01em] text-on-surface">
-                Click Trend (7 Hari)
-              </h2>
-              <div className="flex gap-1 rounded-full border border-border-subtle bg-surface-container p-1">
-                {["7D", "30D", "All"].map((p, i) => (
-                  <span
-                    key={p}
-                    aria-hidden="true"
-                    className={
-                      i === 0
-                        ? "rounded-full bg-primary-container px-3 py-1 text-[12px] font-[600] text-white"
-                        : "rounded-full px-3 py-1 text-[12px] font-[600] text-text-secondary"
-                    }
-                  >
-                    {p}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div className="relative h-52 w-full lg:h-64">
-              <ClickTrendChart data={trend} />
-            </div>
-          </div>
+          <ClickTrendCard trend7={trend7} trend30={trend30} />
 
           <div
             aria-labelledby="platform-heading"
@@ -124,9 +116,9 @@ export default async function DashboardPage() {
             <h2 id="top-heading" className="text-[20px] font-[600] leading-7 tracking-[-0.01em] text-on-surface">
               Produk Terlaris
             </h2>
-            <a href="/admin/products" className="text-[12px] font-[600] uppercase tracking-[0.05em] text-primary hover:underline">
+            <Link href="/admin/products" className="text-[12px] font-[600] uppercase tracking-[0.05em] text-primary hover:underline">
               Lihat Semua
-            </a>
+            </Link>
           </div>
           <ul className="flex flex-col divide-y divide-border-subtle">
             {topProducts.map((p) => (
@@ -160,9 +152,9 @@ export default async function DashboardPage() {
             <h2 id="top-table" className="text-[20px] font-[600] leading-7 tracking-[-0.01em] text-on-surface">
               Produk Terlaris
             </h2>
-            <a href="/admin/products" className="text-[15px] font-[600] text-primary hover:underline">
+            <Link href="/admin/products" className="text-[15px] font-[600] text-primary hover:underline">
               Lihat Semua
-            </a>
+            </Link>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left">
@@ -185,7 +177,7 @@ export default async function DashboardPage() {
                     </td>
                     <td className="p-4 text-right text-[15px] text-on-surface">{formatNumber(p.clickCount)}</td>
                     <td className="p-4 text-right text-[15px] font-bold text-accent-green">
-                      {p.earningsTotal > 0 ? formatRupiah(p.earningsTotal) : "—"}
+                      {(p.income ?? 0) > 0 ? formatRupiah(p.income) : "—"}
                     </td>
                   </tr>
                 ))}
@@ -211,3 +203,5 @@ function normalizePlatforms(data: { platform: PlatformKey; total: number }[]) {
     .map((p) => data.find((d) => d.platform === p) ?? { platform: p, total: 0 })
     .filter((d) => d.total > 0);
 }
+
+

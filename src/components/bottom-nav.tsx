@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Package, Settings } from "lucide-react";
+import { LayoutDashboard, Package, Settings, Wallet } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
 const items = [
   { href: "/admin/dashboard", label: "Overview", icon: LayoutDashboard },
   { href: "/admin/products", label: "Products", icon: Package },
+  { href: "/admin/earnings", label: "Earnings", icon: Wallet },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
@@ -18,7 +19,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Navigasi admin"
-      className="fixed bottom-0 left-1/2 z-50 flex h-16 w-full max-w-[480px] -translate-x-1/2 items-center justify-around border-t border-border-subtle bg-surface-container px-4 pb-[max(env(safe-area-inset-bottom),0px)]"
+      className="fixed bottom-0 left-1/2 z-50 flex h-16 w-full max-w-[480px] -translate-x-1/2 items-center justify-around border-t border-border-subtle bg-surface-container px-4 pb-[max(env(safe-area-inset-bottom),0px)] lg:hidden"
     >
       {items.map((item) => {
         const active = pathname.startsWith(item.href);

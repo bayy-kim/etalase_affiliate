@@ -39,8 +39,7 @@ export async function createProductAction(_: ActionState, formData: FormData): P
     iconKey: formData.get("iconKey"),
     platform: formData.get("platform"),
     affiliateUrl: formData.get("affiliateUrl"),
-    priceMin: formData.get("priceMin") || null,
-    priceMax: formData.get("priceMax") || null,
+    income: formData.get("income") || null,
     isActive: formData.get("isActive") === "on",
     sortOrder: formData.get("sortOrder") || undefined,
   });
@@ -74,8 +73,7 @@ export async function updateProductAction(
     iconKey: formData.get("iconKey"),
     platform: formData.get("platform"),
     affiliateUrl: formData.get("affiliateUrl"),
-    priceMin: formData.get("priceMin") || null,
-    priceMax: formData.get("priceMax") || null,
+    income: formData.get("income") || null,
     isActive: formData.get("isActive") === "on",
     sortOrder: formData.get("sortOrder") || undefined,
   });
@@ -112,3 +110,4 @@ export async function deleteProductAction(id: string): Promise<{ error?: string 
   revalidatePath("/admin/products");
   return {};
 }
+

@@ -173,42 +173,27 @@ export function ProductForm({
         )}
       </div>
 
-      {/* Harga */}
+      {/* Pendapatan dari produk */}
       <div className="flex flex-col gap-2">
-        <Label>Rentang Harga</Label>
-        <div className="flex items-center gap-4">
-          <div className="relative flex-1">
-            <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[15px] text-text-secondary">
-              Rp
-            </span>
-            <Input
-              name="priceMin"
-              type="number"
-              inputMode="numeric"
-              min={0}
-              defaultValue={product?.priceMin ?? ""}
-              placeholder="0"
-              className="pl-12"
-            />
-          </div>
-          <span className="text-[15px] text-text-secondary" aria-hidden="true">
-            -
+        <Label htmlFor="income">Pendapatan dari Produk</Label>
+        <div className="relative">
+          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[15px] text-text-secondary">
+            Rp
           </span>
-          <div className="relative flex-1">
-            <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[15px] text-text-secondary">
-              Rp
-            </span>
-            <Input
-              name="priceMax"
-              type="number"
-              inputMode="numeric"
-              min={0}
-              defaultValue={product?.priceMax ?? ""}
-              placeholder="0"
-              className="pl-12"
-            />
-          </div>
+          <Input
+            id="income"
+            name="income"
+            type="number"
+            inputMode="numeric"
+            min={0}
+            defaultValue={product?.income ?? ""}
+            placeholder="0"
+            className="pl-12"
+          />
         </div>
+        <p className="text-[12px] text-text-secondary">
+          Otomatis bertambah tiap kamu mencatat earning untuk produk ini. Isi manual untuk nilai awal.
+        </p>
       </div>
 
       {/* Catatan internal */}

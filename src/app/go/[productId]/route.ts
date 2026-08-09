@@ -19,8 +19,18 @@ export async function GET(
     return res;
   }
 
-  // Catat klik secara server-side (100% terekam walau JS di-strip in-app browser)
-  await recordClick(productId);
+  // Catat klik secara server-side (100% terekam walau JS di-strip in-app browser).
+  // Prefetch Next.js (Link) juga mengirim GET ke sini — JANGAN dicatat sebagai klik,
+  // supaya angka klik tidak menggelembung hanya karena halaman di-refresh.
+  const isPrefetch =
+    _req.headers.get("next-router-prefetch") === "1" ||
+    _req.headers.get("rsc") === "1" ||
+    _req.headers.get("purpose") === "prefetch" ||
+    new URL(_req.url).searchParams.has("_rsc");
+
+  if (!isPrefetch) {
+    await recordClick(productId);
+  }
 
   const res = NextResponse.redirect(product.affiliateUrl, 302);
   res.headers.set("Cache-Control", "no-store");

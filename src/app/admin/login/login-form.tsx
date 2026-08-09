@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useEffect } from "react";
 import { Eye, EyeOff, ShieldCheck } from "lucide-react";
 import { useState } from "react";
@@ -105,12 +106,12 @@ export function LoginForm() {
           © 2026 Etalase Affiliate. Secure Admin Access.
         </p>
         <nav aria-label="Footer" className="mt-1 flex gap-4">
-          <a href="#" className="text-[12px] font-[600] uppercase tracking-[0.05em] text-text-secondary transition-colors hover:text-primary">
+          <Link href="/privacy" className="text-[12px] font-[600] uppercase tracking-[0.05em] text-text-secondary transition-colors hover:text-primary">
             Privacy
-          </a>
-          <a href="#" className="text-[12px] font-[600] uppercase tracking-[0.05em] text-text-secondary transition-colors hover:text-primary">
+          </Link>
+          <Link href="/terms" className="text-[12px] font-[600] uppercase tracking-[0.05em] text-text-secondary transition-colors hover:text-primary">
             Terms
-          </a>
+          </Link>
           <a href="#" className="text-[12px] font-[600] uppercase tracking-[0.05em] text-text-secondary transition-colors hover:text-primary">
             Support
           </a>

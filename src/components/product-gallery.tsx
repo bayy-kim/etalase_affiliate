@@ -15,8 +15,8 @@ type IndexItem = {
   category: string;
   categoryLabel: string;
   platform: PlatformKey;
-  sortOrder: number;
   iconKey: string;
+  pos: number;
 };
 
 function categoryLabelOf(value: string): string {
@@ -46,17 +46,20 @@ export function ProductGallery({
         category: p.category,
         categoryLabel: categoryLabelOf(p.category),
         platform: p.platform,
-        sortOrder: p.sortOrder,
         iconKey: p.iconKey,
+        pos: 0,
       })),
     [products]
   );
 
+  // Penomoran DINAMIS: pos = urutan 1..N pada daftar yang tampil (produk nonaktif
+  // sudah tidak ikut dari getPublicProducts), jadi tidak pernah loncat.
   const byCategory = useMemo(
     () =>
-      activeCategory === "all"
+      (activeCategory === "all"
         ? indexItems
-        : indexItems.filter((it) => it.category === activeCategory),
+        : indexItems.filter((it) => it.category === activeCategory)
+      ).map((it, i) => ({ ...it, pos: i + 1 })),
     [indexItems, activeCategory]
   );
 
@@ -64,10 +67,10 @@ export function ProductGallery({
     const q = debounced.trim();
     if (!q) return byCategory;
 
-    // Angka = urutan produk di etalase (posisi 1-based)
+    // Angka = posisi dinamis di etalase (1-based, sesuai nomor yang tampil)
     const numeric = /^\d{1,3}$/.test(q) ? parseInt(q, 10) : null;
     if (numeric !== null) {
-      const positional = byCategory.filter((it) => it.sortOrder + 1 === numeric);
+      const positional = byCategory.filter((it) => it.pos === numeric);
       if (positional.length > 0) return positional;
     }
 
@@ -144,10 +147,11 @@ export function ProductGallery({
                 <Link
                   key={it.id}
                   href={`/go/${it.id}`}
+                  prefetch={false}
                   className="group flex items-center gap-4 rounded-xl border border-border-subtle bg-surface-card p-4 transition-colors hover:border-primary-container focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container"
                 >
                   <span className="text-[20px] font-[600] leading-7 tracking-[-0.01em] text-primary">
-                    {String(it.sortOrder + 1).padStart(2, "0")}
+                    {String(it.pos).padStart(2, "0")}
                   </span>
                   <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border-subtle bg-background-base text-text-primary">
                     <Icon className="h-5 w-5" aria-hidden="true" />

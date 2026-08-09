@@ -25,6 +25,7 @@ export function ProductRow({ product }: { product: ProductRowData }) {
     >
       <Link
         href={`/go/${product.id}`}
+        prefetch={false}
         className="group flex items-center justify-between rounded-2xl border border-border-subtle bg-surface-card p-4 transition-colors hover:bg-surface-variant focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container"
       >
         <span className="flex min-w-0 items-center gap-4">

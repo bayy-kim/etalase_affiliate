@@ -130,10 +130,10 @@ export default async function StorefrontPage({
             © 2026 Etalase Affiliate
           </span>
           <nav aria-label="Footer" className="flex gap-4">
-            <Link href="/" className="text-[12px] font-[600] uppercase tracking-[0.05em] text-on-surface-variant transition-colors hover:text-primary">
+            <Link href="/privacy" className="text-[12px] font-[600] uppercase tracking-[0.05em] text-on-surface-variant transition-colors hover:text-primary">
               Privacy
             </Link>
-            <Link href="/" className="text-[12px] font-[600] uppercase tracking-[0.05em] text-on-surface-variant transition-colors hover:text-primary">
+            <Link href="/terms" className="text-[12px] font-[600] uppercase tracking-[0.05em] text-on-surface-variant transition-colors hover:text-primary">
               Terms
             </Link>
           </nav>

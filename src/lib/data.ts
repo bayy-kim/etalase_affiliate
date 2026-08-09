@@ -221,8 +221,8 @@ const mockAudit: AuditEntry[] = [];
 const PROFILE_DEFAULTS: Profile = {
   handle: process.env.ADMIN_HANDLE ?? "@abny2524",
   displayName: process.env.ADMIN_DISPLAY_NAME ?? "abny",
-  bio: "rekomendasi outfit cowo ‼️\ncek keranjang kuning / link di bawah 👇🏻",
-  avatar: "https://p16-sign-va.tiktokcdn.com/tos-maliva-avt-0068/7321528659132219438~c5_1080x1080.jpeg",
+  bio: "Kurasi & Rekomendasi Produk Pilihan Terbaik 🛍️\nTemukan penawaran terbaik untuk outfit, gadget, & kebutuhan harian. Tap produk untuk checkout langsung di platform resmi.",
+  avatar: "/avatar-abny.jpg",
   link: "https://www.tiktok.com/@abny2524",
 };
 
@@ -236,7 +236,7 @@ export async function getProfile(): Promise<Profile> {
       handle: map.get("handle") ?? PROFILE_DEFAULTS.handle,
       displayName: map.get("displayName") ?? PROFILE_DEFAULTS.displayName,
       bio: map.get("bio") ?? PROFILE_DEFAULTS.bio,
-      avatar: map.get("avatar") || null,
+      avatar: map.get("avatar") || PROFILE_DEFAULTS.avatar,
       link: map.get("link") ?? PROFILE_DEFAULTS.link,
     };
   } catch {

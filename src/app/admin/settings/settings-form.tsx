@@ -25,7 +25,7 @@ export function SettingsForm({ profile }: { profile: Profile }) {
   };
 
   return (
-    <div className="grid grid-cols-1 gap-6 pb-20 lg:grid-cols-2 lg:pb-0">
+    <div className="grid grid-cols-1 gap-6 items-start lg:grid-cols-2">
       {/* Foto profil */}
       <section
         aria-labelledby="avatar-heading"

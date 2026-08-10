@@ -701,6 +701,25 @@ export async function getPopularSearches(limit = 6): Promise<PopularSearch[]> {
     .slice(0, limit);
 }
 
+/* =========================================================================
+ * Click & Visit tracking
+ * ======================================================================== */
+
+const mockVisitLogs: { createdAt: Date }[] = [];
+
+export async function recordVisit(): Promise<boolean> {
+  if (isDb()) {
+    try {
+      await prisma.visitLog.create({ data: {} });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+  mockVisitLogs.push({ createdAt: new Date() });
+  return true;
+}
+
 export async function recordClick(productId: string): Promise<boolean> {
   if (isDb()) {
     try {
@@ -714,7 +733,7 @@ export async function recordClick(productId: string): Promise<boolean> {
   return true;
 }
 
-export type DailyClick = { label: string; clicks: number };
+export type DailyClick = { label: string; clicks: number; visits: number };
 
 const DAY_NAMES = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
 
@@ -730,15 +749,23 @@ export async function getClickTrend(days = 7): Promise<DailyClick[]> {
   const start = new Date(today);
   start.setDate(start.getDate() - (days - 1));
 
-  // Ambil klik sebaris dari DB atau mock, lalu agregasi per hari di JS.
-  let rows: { createdAt: Date }[];
+  // Ambil klik sebaris dari DB atau mock
+  let clickRows: { createdAt: Date }[];
+  let visitRows: { createdAt: Date }[];
   if (isDb()) {
-    rows = await prisma.clickLog.findMany({
-      where: { createdAt: { gte: start } },
-      select: { createdAt: true },
-    });
+    [clickRows, visitRows] = await Promise.all([
+      prisma.clickLog.findMany({
+        where: { createdAt: { gte: start } },
+        select: { createdAt: true },
+      }),
+      prisma.visitLog.findMany({
+        where: { createdAt: { gte: start } },
+        select: { createdAt: true },
+      }),
+    ]);
   } else {
-    rows = mockClicks.filter((c) => c.createdAt >= start);
+    clickRows = mockClicks.filter((c) => c.createdAt >= start);
+    visitRows = mockVisitLogs.filter((v) => v.createdAt >= start);
   }
 
   const out: DailyClick[] = [];
@@ -749,12 +776,17 @@ export async function getClickTrend(days = 7): Promise<DailyClick[]> {
     next.setDate(d.getDate() + 1);
 
     // Filter baris log berdasarkan jam WIB
-    const count = rows.filter((c) => {
+    const clicksCount = clickRows.filter((c) => {
       const wib = getWibDate(c.createdAt);
       return wib >= d && wib < next;
     }).length;
 
-    out.push({ label: DAY_NAMES[d.getDay()], clicks: count });
+    const visitsCount = visitRows.filter((v) => {
+      const wib = getWibDate(v.createdAt);
+      return wib >= d && wib < next;
+    }).length;
+
+    out.push({ label: DAY_NAMES[d.getDay()], clicks: clicksCount, visits: visitsCount });
   }
   return out;
 }
@@ -762,6 +794,11 @@ export async function getClickTrend(days = 7): Promise<DailyClick[]> {
 export async function getTotalClicks(): Promise<number> {
   if (isDb()) return prisma.clickLog.count();
   return mockClicks.length;
+}
+
+export async function getTotalVisits(): Promise<number> {
+  if (isDb()) return prisma.visitLog.count();
+  return mockVisitLogs.length;
 }
 
 export type TrendDelta = { current: number; previous: number; deltaPct: number | null };
@@ -792,6 +829,39 @@ export async function getClickDelta(days = 7): Promise<TrendDelta> {
   let prevCount = 0;
   for (const c of rows) {
     if (c.createdAt < mid) prevCount += 1;
+    else currentCount += 1;
+  }
+
+  const deltaPct =
+    prevCount === 0 ? (currentCount > 0 ? 100 : null) : ((currentCount - prevCount) / prevCount) * 100;
+  return { current: currentCount, previous: prevCount, deltaPct };
+}
+
+/** Bandingkan total kunjungan N hari terakhir vs N hari sebelumnya */
+export async function getVisitDelta(days = 7): Promise<TrendDelta> {
+  const endToday = new Date();
+  endToday.setHours(23, 59, 59, 999);
+  const start = new Date(endToday);
+  start.setDate(start.getDate() - (days * 2 - 1));
+  start.setHours(0, 0, 0, 0);
+
+  let rows: { createdAt: Date }[];
+  if (isDb()) {
+    rows = await prisma.visitLog.findMany({
+      where: { createdAt: { gte: start } },
+      select: { createdAt: true },
+    });
+  } else {
+    rows = mockVisitLogs.filter((v) => v.createdAt >= start);
+  }
+
+  const mid = new Date(start);
+  mid.setDate(mid.getDate() + days);
+
+  let currentCount = 0;
+  let prevCount = 0;
+  for (const v of rows) {
+    if (v.createdAt < mid) prevCount += 1;
     else currentCount += 1;
   }
 

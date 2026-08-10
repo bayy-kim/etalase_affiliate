@@ -5,7 +5,7 @@ import {
   Package,
   MousePointerClick,
   CircleDollarSign,
-  Gauge,
+  Users,
   Store,
 } from "lucide-react";
 
@@ -18,6 +18,7 @@ import {
   getAllProducts,
   getClickTrend,
   getClickDelta,
+  getVisitDelta,
   getEarningsStats,
   getEarningsDelta,
   getPopularSearches,
@@ -51,21 +52,20 @@ export const metadata: Metadata = { title: "Dashboard" };
 export default async function DashboardPage() {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://etalaseaffiliate.vercel.app";
 
-  const [products, trend7, trend30, clickDelta, earningsByPlatform, earningsDelta, popularSearches] =
+  const [products, trend7, trend30, clickDelta, visitDelta, earningsByPlatform, earningsDelta, popularSearches] =
     await Promise.all([
       getAllProducts(),
       getClickTrend(7),
       getClickTrend(30),
       getClickDelta(7),
+      getVisitDelta(7),
       getEarningsStats(),
       getEarningsDelta(),
       getPopularSearches(6),
     ]);
 
   const activeCount = products.filter((p) => p.isActive).length;
-  const totalClicks = products.reduce((s, p) => s + p.clickCount, 0);
   const topProducts = [...products].sort((a, b) => b.clickCount - a.clickCount).slice(0, 5);
-  const avgClicks = activeCount > 0 ? Math.round(totalClicks / activeCount) : 0;
 
   return (
     <AdminShell
@@ -97,6 +97,13 @@ export default async function DashboardPage() {
             variant="mint"
           />
           <StatCard
+            label="Kunjungan 7 Hari"
+            value={formatNumber(visitDelta.current)}
+            icon={Users}
+            trendPct={visitDelta.deltaPct}
+            variant="rose"
+          />
+          <StatCard
             label="Klik 7 Hari"
             value={formatNumber(clickDelta.current)}
             icon={MousePointerClick}
@@ -109,13 +116,6 @@ export default async function DashboardPage() {
             icon={CircleDollarSign}
             trendPct={earningsDelta.deltaPct}
             variant="amber"
-          />
-          <StatCard
-            label="Rata-rata Klik / Produk"
-            value={formatNumber(avgClicks)}
-            icon={Gauge}
-            sub="produk aktif"
-            variant="rose"
           />
         </section>
 

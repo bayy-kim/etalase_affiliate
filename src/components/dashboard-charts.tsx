@@ -27,12 +27,12 @@ const tooltipStyle = {
 export function ClickTrendChart({
   data,
 }: {
-  data: { label: string; clicks: number }[];
+  data: { label: string; clicks: number; visits?: number }[];
 }) {
-  const maxClicks = Math.max(1, ...data.map((d) => d.clicks));
+  const maxVal = Math.max(1, ...data.map((d) => Math.max(d.clicks, d.visits ?? 0)));
 
   const formatYAxis = (v: number) => {
-    if (maxClicks >= 1000) {
+    if (maxVal >= 1000) {
       return (v / 1000).toFixed(1).replace(/\.0$/, "") + "k";
     }
     return String(Math.round(v));
@@ -42,8 +42,12 @@ export function ClickTrendChart({
     <ResponsiveContainer width="100%" height="100%">
       <AreaChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
         <defs>
+          <linearGradient id="visitFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#f43f5e" stopOpacity={0.35} />
+            <stop offset="100%" stopColor="#f43f5e" stopOpacity={0} />
+          </linearGradient>
           <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#6366f1" stopOpacity={0.4} />
+            <stop offset="0%" stopColor="#6366f1" stopOpacity={0.35} />
             <stop offset="100%" stopColor="#6366f1" stopOpacity={0} />
           </linearGradient>
         </defs>
@@ -68,8 +72,18 @@ export function ClickTrendChart({
         />
         <Area
           type="monotone"
+          dataKey="visits"
+          name="Kunjungan"
+          stroke="#f43f5e"
+          strokeWidth={3}
+          fill="url(#visitFill)"
+          dot={false}
+          activeDot={{ r: 5, fill: "#ffffff", stroke: "#f43f5e", strokeWidth: 3 }}
+        />
+        <Area
+          type="monotone"
           dataKey="clicks"
-          name="Klik"
+          name="Klik Produk"
           stroke="#4f46e5"
           strokeWidth={3}
           fill="url(#trendFill)"

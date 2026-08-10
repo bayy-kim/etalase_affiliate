@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { ArrowRight, Package, MousePointerClick } from "lucide-react";
 
-import { getPublicProductsPaginated, getTotalClicks, getProfile } from "@/lib/data";
+import { getPublicProductsPaginated, getTotalClicks, getProfile, recordVisit } from "@/lib/data";
 import { formatNumber } from "@/lib/format";
 import { CategoryTabs } from "@/components/category-tabs";
 import { ProductGallery } from "@/components/product-gallery";
@@ -26,6 +26,9 @@ export default async function StorefrontPage({
   const activeCategory = params.k ?? "all";
   const searchQuery = params.q ?? "";
   const page = parseInt(params.page ?? "1", 10) || 1;
+
+  // Catat kunjungan pengunjung publik (fire-and-forget, non-blocking)
+  recordVisit().catch(() => {});
 
   const [{ products, totalCount, hasMore }, totalClicks, profile] = await Promise.all([
     getPublicProductsPaginated({

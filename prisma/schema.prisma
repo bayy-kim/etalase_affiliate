@@ -95,3 +95,10 @@ model SearchLog {
   @@index([query])
   @@index([createdAt])
 }
+
+model VisitLog {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}

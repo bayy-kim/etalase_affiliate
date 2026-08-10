@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { ArrowRight, MoreVertical, Package, MousePointerClick } from "lucide-react";
+import { ArrowRight, Package, MousePointerClick } from "lucide-react";
 
 import { getPublicProducts, getTotalClicks, getProfile } from "@/lib/data";
 import { formatNumber } from "@/lib/format";
@@ -44,13 +44,6 @@ export default async function StorefrontPage({
             ETALASE AFFILIATE
           </span>
         </span>
-        <Link
-          href="/admin/login"
-          aria-label="Menu admin"
-          className="flex h-10 w-10 items-center justify-center rounded-full text-slate-700 transition-colors hover:bg-white hover:shadow-sm"
-        >
-          <MoreVertical className="h-5 w-5" aria-hidden="true" />
-        </Link>
       </header>
 
       {/* Konten */}
@@ -58,7 +51,7 @@ export default async function StorefrontPage({
         {/* Profil Card Taskly Clay style */}
         <section className="flex flex-col items-center gap-3 rounded-3xl border border-slate-200/80 bg-white p-6 shadow-clay-card pt-8 text-center lg:p-8">
           <div className="relative mb-1">
-            <div className="absolute -inset-2 rounded-full bg-gradient-to-r from-indigo-200 to-emerald-200 blur-lg opacity-60" aria-hidden="true" />
+            <div className="absolute -inset-2 rounded-full bg-gradient-to-r from-emerald-300 to-teal-200 blur-lg opacity-60" aria-hidden="true" />
             <Avatar
               name={profile.displayName}
               src={profile.avatar}
@@ -88,7 +81,7 @@ export default async function StorefrontPage({
               <strong className="text-slate-900 font-bold">{formatNumber(products.length)}</strong> Produk
             </span>
             <span className="inline-flex items-center gap-2 rounded-2xl border border-slate-200/80 bg-slate-50 px-4 py-2 text-[13px] font-semibold text-slate-600 shadow-sm transition-all hover:bg-slate-100">
-              <MousePointerClick className="h-4 w-4 text-indigo-600" aria-hidden="true" />
+              <MousePointerClick className="h-4 w-4 text-emerald-600" aria-hidden="true" />
               <strong className="text-slate-900 font-bold">{formatNumber(totalClicks)}</strong> Klik
             </span>
           </div>
@@ -119,7 +112,7 @@ export default async function StorefrontPage({
       <div className="sticky bottom-4 z-30 mt-auto px-4 lg:hidden">
         <Link
           href="/?k=all"
-          className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 text-[15px] font-bold text-white shadow-lg shadow-indigo-500/30 transition-all active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+          className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 text-[15px] font-bold text-white shadow-lg shadow-emerald-500/30 transition-all active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"
         >
           Lihat Semua Produk
           <ArrowRight className="h-5 w-5" aria-hidden="true" />
@@ -133,10 +126,10 @@ export default async function StorefrontPage({
             © 2026 Etalase Affiliate
           </span>
           <nav aria-label="Footer" className="flex gap-4">
-            <Link href="/privacy" className="text-[12px] font-bold uppercase tracking-wider text-slate-500 transition-colors hover:text-indigo-600">
+            <Link href="/privacy" className="text-[12px] font-bold uppercase tracking-wider text-slate-500 transition-colors hover:text-emerald-600">
               Privacy
             </Link>
-            <Link href="/terms" className="text-[12px] font-bold uppercase tracking-wider text-slate-500 transition-colors hover:text-indigo-600">
+            <Link href="/terms" className="text-[12px] font-bold uppercase tracking-wider text-slate-500 transition-colors hover:text-emerald-600">
               Terms
             </Link>
           </nav>

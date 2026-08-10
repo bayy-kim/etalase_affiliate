@@ -9,6 +9,7 @@ import {
   updateProduct,
   setProductActive,
   deleteProduct,
+  updateProductOrders,
   writeAudit,
 } from "@/lib/data";
 import { getSession } from "@/lib/session";
@@ -106,6 +107,16 @@ export async function deleteProductAction(id: string): Promise<{ error?: string 
   if ("error" in auth) return { error: auth.error };
   await deleteProduct(id);
   await writeAudit(auth.adminId, "delete_product", "product", id);
+  revalidatePath("/");
+  revalidatePath("/admin/products");
+  return {};
+}
+
+export async function reorderProductsAction(orders: { id: string; sortOrder: number }[]): Promise<{ error?: string }> {
+  const auth = await requireAdmin();
+  if ("error" in auth) return { error: auth.error };
+  await updateProductOrders(orders);
+  await writeAudit(auth.adminId, "reorder_products", "product", null, { count: orders.length });
   revalidatePath("/");
   revalidatePath("/admin/products");
   return {};

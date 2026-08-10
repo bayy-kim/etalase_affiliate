@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { MousePointerClick, Plus, Search } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowDown, ArrowUp, MousePointerClick, Plus, Search } from "lucide-react";
 
 import { ProductActions } from "@/components/product-actions";
 import { Select } from "@/components/ui/select";
@@ -10,15 +11,43 @@ import { categorySelectOptions, getIcon, platformUppercase } from "@/lib/icons";
 import { formatNumber, formatRupiah } from "@/lib/format";
 import type { Product } from "@/lib/data";
 import { cn } from "@/lib/utils";
+import { reorderProductsAction } from "@/server/actions/product";
 
 type SortKey = "order" | "name" | "clicks";
 
 export function ProductBrowser({ products }: { products: Product[] }) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
   const [platform, setPlatform] = useState("all");
   const [status, setStatus] = useState("all");
   const [sort, setSort] = useState<SortKey>("order");
+  const [reordering, setReordering] = useState(false);
+
+  const moveProduct = async (index: number, direction: "up" | "down") => {
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= list.length) return;
+
+    setReordering(true);
+
+    // Swap sortOrder
+    const currentItem = list[index];
+    const targetItem = list[targetIndex];
+
+    const currentOrder = currentItem.sortOrder;
+    const targetOrder = targetItem.sortOrder === currentOrder
+      ? (direction === "up" ? currentOrder - 1 : currentOrder + 1)
+      : targetItem.sortOrder;
+
+    const updates = [
+      { id: currentItem.id, sortOrder: targetOrder },
+      { id: targetItem.id, sortOrder: currentOrder },
+    ];
+
+    await reorderProductsAction(updates);
+    setReordering(false);
+    router.refresh();
+  };
 
   const list = useMemo(() => {
     let out = products;
@@ -104,9 +133,11 @@ export function ProductBrowser({ products }: { products: Product[] }) {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
-          {list.map((product) => {
+          {list.map((product, idx) => {
             const Icon = getIcon(product.iconKey);
             const income = product.income ?? 0;
+            const canReorder = sort === "order" && category === "all" && platform === "all" && status === "all" && !query;
+
             return (
               <div
                 key={product.id}
@@ -127,14 +158,38 @@ export function ProductBrowser({ products }: { products: Product[] }) {
                     <Icon className="h-6 w-6" aria-hidden="true" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <h3
-                      className={cn(
-                        "truncate text-[16px] font-bold leading-6 tracking-tight",
-                        product.isActive ? "text-slate-900" : "text-slate-500"
+                    <div className="flex items-center justify-between gap-2">
+                      <h3
+                        className={cn(
+                          "truncate text-[16px] font-bold leading-6 tracking-tight",
+                          product.isActive ? "text-slate-900" : "text-slate-500"
+                        )}
+                      >
+                        {product.label}
+                      </h3>
+                      {canReorder && (
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            disabled={idx === 0 || reordering}
+                            onClick={() => moveProduct(idx, "up")}
+                            title="Naikkan urutan"
+                            className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600 transition-all hover:bg-indigo-600 hover:text-white disabled:opacity-30 disabled:pointer-events-none"
+                          >
+                            <ArrowUp className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={idx === list.length - 1 || reordering}
+                            onClick={() => moveProduct(idx, "down")}
+                            title="Turunkan urutan"
+                            className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600 transition-all hover:bg-indigo-600 hover:text-white disabled:opacity-30 disabled:pointer-events-none"
+                          >
+                            <ArrowDown className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       )}
-                    >
-                      {product.label}
-                    </h3>
+                    </div>
                     <div className="mt-1.5 flex flex-wrap items-center gap-2">
                       <span className="inline-block rounded-full border border-indigo-100 bg-indigo-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-600">
                         {platformUppercase[product.platform]}

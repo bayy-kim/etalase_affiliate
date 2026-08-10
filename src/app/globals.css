@@ -18,13 +18,21 @@
   --color-outline: #94a3b8;
   --color-outline-variant: #cbd5e1;
 
-  --color-primary: #6366f1;
-  --color-primary-container: #4f46e5;
-  --color-primary-hover: #4338ca;
-  --color-primary-container-dark: #e0e7ff;
-  --color-secondary: #10b981;
-  --color-secondary-container: #059669;
-  --color-accent-green: #10b981;
+  --color-primary: #1db954;
+  --color-primary-container: #16a34a;
+  --color-primary-hover: #15803d;
+  --color-primary-container-dark: #dcfce7;
+  --color-secondary: #22c55e;
+  --color-secondary-container: #16a34a;
+  --color-accent-green: #22c55e;
+
+  /* Platform colors */
+  --color-tiktok: #1db954;
+  --color-tiktok-light: #dcfce7;
+  --color-tiktok-mid: #86efac;
+  --color-shopee: #f97316;
+  --color-shopee-light: #fff7ed;
+  --color-shopee-mid: #fed7aa;
 
   --color-text-primary: #1e293b;
   --color-text-secondary: #64748b;

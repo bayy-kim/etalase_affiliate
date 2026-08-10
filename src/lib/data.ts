@@ -468,6 +468,30 @@ export async function setProductActive(id: string, isActive: boolean): Promise<P
   return getProduct(id);
 }
 
+export async function updateProductOrders(orders: { id: string; sortOrder: number }[]): Promise<boolean> {
+  if (isDb()) {
+    try {
+      await prisma.$transaction(
+        orders.map((o) =>
+          prisma.product.update({
+            where: { id: o.id },
+            data: { sortOrder: o.sortOrder },
+          })
+        )
+      );
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  for (const o of orders) {
+    const p = mockProducts.find((x) => x.id === o.id);
+    if (p) p.sortOrder = o.sortOrder;
+  }
+  return true;
+}
+
 export async function deleteProduct(id: string): Promise<boolean> {
   if (isDb()) {
     try {

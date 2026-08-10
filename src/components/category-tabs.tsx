@@ -36,16 +36,16 @@ export function CategoryTabs({ active }: { active: string }) {
             type="button"
             onClick={() => select(tab.value)}
             className={cn(
-              "relative shrink-0 rounded-2xl border px-5 py-2.5 text-[14px] font-bold leading-5 transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500",
+              "relative shrink-0 rounded-2xl border px-5 py-2.5 text-[14px] font-bold leading-5 transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500",
               isActive
-                ? "border-indigo-600 bg-indigo-600 text-white shadow-md shadow-indigo-500/25"
+                ? "border-emerald-600 bg-emerald-600 text-white shadow-md shadow-emerald-500/25"
                 : "border-slate-200/80 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 shadow-sm"
             )}
           >
             {isActive && (
               <motion.span
                 layoutId="category-pill"
-                className="absolute inset-0 rounded-2xl bg-indigo-600"
+                className="absolute inset-0 rounded-2xl bg-emerald-600"
                 transition={{ type: "spring", stiffness: 500, damping: 35 }}
                 aria-hidden="true"
               />

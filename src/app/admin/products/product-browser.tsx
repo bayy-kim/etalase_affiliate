@@ -30,19 +30,16 @@ export function ProductBrowser({ products }: { products: Product[] }) {
 
     setReordering(true);
 
-    // Swap sortOrder
-    const currentItem = list[index];
-    const targetItem = list[targetIndex];
+    // Salin list saat ini untuk di-reorder menggunakan Array Splice (logika Insertion)
+    const rearranged = [...list];
+    const [movedItem] = rearranged.splice(index, 1);
+    rearranged.splice(targetIndex, 0, movedItem);
 
-    const currentOrder = currentItem.sortOrder;
-    const targetOrder = targetItem.sortOrder === currentOrder
-      ? (direction === "up" ? currentOrder - 1 : currentOrder + 1)
-      : targetItem.sortOrder;
-
-    const updates = [
-      { id: currentItem.id, sortOrder: targetOrder },
-      { id: targetItem.id, sortOrder: currentOrder },
-    ];
+    // Re-indexing: Berikan sortOrder yang rapi berurutan mulai dari 0, 1, 2, dst.
+    const updates = rearranged.map((item, idx) => ({
+      id: item.id,
+      sortOrder: idx,
+    }));
 
     await reorderProductsAction(updates);
     setReordering(false);
@@ -146,7 +143,10 @@ export function ProductBrowser({ products }: { products: Product[] }) {
                   product.isActive ? "" : "opacity-60"
                 )}
               >
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-3.5">
+                  <span className="font-mono text-[14px] font-extrabold text-indigo-600 shrink-0 pt-3.5">
+                    #{String(idx + 1).padStart(2, "0")}
+                  </span>
                   <span
                     className={cn(
                       "flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border-t border-white border-b border-indigo-200/60 shadow-[0_6px_14px_-3px_rgba(99,102,241,0.25)] transition-transform duration-200 group-hover:scale-105",

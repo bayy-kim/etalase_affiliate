@@ -3,6 +3,7 @@
 import { getSession } from "@/lib/session";
 
 const API_KEY = process.env.GEMINI_API_KEY;
+const MODEL = "gemini-flash-latest";
 
 export type AiAnalysisResult = {
   error?: string;
@@ -18,32 +19,40 @@ export type AiAnalysisResult = {
   };
 };
 
+function systemInstructionsFor(category: string): string {
+  if (category === "skincare") {
+    return `KATEGORI: Skincare & Beauty.
+ATURAN UTAMA: DILARANG MENAMPILKAN WAJAH MODEL (STRICTLY NO FACES).
+Gunakan demonstrasi TANGAN SAJA (Hand-only demonstration), close-up tekstur cream/serum pada punggung tangan atau telapak tangan dengan pencahayaan lembut.`;
+  }
+  if (category === "fashion") {
+    return `KATEGORI: Fashion & Apparel.
+ATURAN UTAMA: Wajib menggunakan Model Wanita Lokal / Micro-Influencer Natural (Aesthetic everyday female model).
+DILARANG MENAMPILKAN ARTIS ATAU SELEBRITI TERNAMA (STRICTLY NO FAMOUS CELEBRITIES / ARTISTS).`;
+  }
+  return `KATEGORI: Gadget / Lifestyle.
+Aturan: Konsep estetis hands-on desk setup / aesthetic daily use.`;
+}
+
+function parseJsonFromText(rawText: string): AiAnalysisResult {
+  const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) throw new Error("No JSON found in response");
+  return JSON.parse(jsonMatch[0]) as AiAnalysisResult;
+}
+
 export async function generateContentPromptAction(
   category: string,
   imageBase64?: string
 ): Promise<AiAnalysisResult> {
   const session = await getSession();
   if (!session) return { error: "Tidak terautentikasi." };
-
-  let systemInstructions = "";
-  if (category === "skincare") {
-    systemInstructions = `KATEGORI: Skincare & Beauty.
-ATURAN UTAMA: DILARANG MENAMPILKAN WAJAH MODEL (STRICTLY NO FACES).
-Gunakan demonstrasi TANGAN SAJA (Hand-only demonstration), close-up tekstur cream/serum pada punggung tangan atau telapak tangan dengan pencahayaan lembut.`;
-  } else if (category === "fashion") {
-    systemInstructions = `KATEGORI: Fashion & Apparel.
-ATURAN UTAMA: Wajib menggunakan Model Wanita Lokal / Micro-Influencer Natural (Aesthetic everyday female model).
-DILARANG MENAMPILKAN ARTIS ATAU SELEBRITI TERNAMA (STRICTLY NO FAMOUS CELEBRITIES / ARTISTS).`;
-  } else {
-    systemInstructions = `KATEGORI: Gadget / Lifestyle.
-Aturan: Konsep estetis hands-on desk setup / aesthetic daily use.`;
-  }
+  if (!API_KEY) return { error: "GEMINI_API_KEY belum diatur di environment Vercel." };
 
   const promptText = `
 Anda adalah Pakar Video Director & Prompt Engineer Khusus untuk Google Flow / Veo / VideoFX.
 Tugas Anda adalah mengidentifikasi produk (bila ada gambar) dan menghasilkan prompt video 3D/Photorealistic berdurasi singkat yang siap ditempel ke Google Flow.
 
-${systemInstructions}
+${systemInstructionsFor(category)}
 
 Berikan respon DALAM FORMAT JSON VALID tanpa markdown wrapper dengan struktur:
 {
@@ -73,39 +82,36 @@ Berikan respon DALAM FORMAT JSON VALID tanpa markdown wrapper dengan struktur:
     }
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-goog-api-key": API_KEY,
+        },
         body: JSON.stringify({ contents: [{ parts }] }),
       }
     );
 
     if (!response.ok) {
-      // Fallback ke model gemini-1.5-flash jika gemini-2.5-flash belum rilis di endpoint tersebut
-      const fallbackResponse = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ contents: [{ parts }] }),
-        }
-      );
-      if (!fallbackResponse.ok) {
-        return { error: "Gagal menghubungi API Gemini. Periksa koneksi atau API Key." };
-      }
-      const fbData = await fallbackResponse.json();
-      const rawText = fbData?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-      const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) return { error: "Gagal memproses analisis AI." };
-      return JSON.parse(jsonMatch[0]);
+      const errText = await response.text().catch(() => "");
+      console.error("Gemini API error:", response.status, errText.slice(0, 300));
+      return {
+        error: `Gagal menghubungi API Gemini (HTTP ${response.status}). Periksa API Key atau kuota akun.`,
+      };
     }
 
     const data = await response.json();
-    const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) return { error: "Gagal memproses analisis AI." };
-    return JSON.parse(jsonMatch[0]);
+    const rawText =
+      data?.candidates?.[0]?.content?.parts?.[0]?.text ??
+      data?.candidates?.[0]?.content?.parts?.[0]?.thought ??
+      "";
+
+    if (!rawText) {
+      return { error: "Gemini tidak mengembalikan hasil. Coba lagi." };
+    }
+
+    return parseJsonFromText(rawText);
   } catch (e) {
     console.error("Gemini Error:", e);
     return { error: "Terjadi kesalahan sistem saat menghubungi Gemini AI." };

@@ -8,4 +8,6 @@ export const prisma =
     log: process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"],
   });
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+// Simpan instance secara global di semua lingkungan (termasuk Production serverless)
+// untuk mencegah penumpukan koneksi baru (Connection Pool Exhaustion) pada re-invokasi fungsi serverless
+globalForPrisma.prisma = prisma;

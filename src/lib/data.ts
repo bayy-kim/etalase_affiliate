@@ -719,7 +719,13 @@ export type DailyClick = { label: string; clicks: number };
 const DAY_NAMES = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
 
 export async function getClickTrend(days = 7): Promise<DailyClick[]> {
-  const today = new Date();
+  // Gunakan offset WIB (UTC+7) agar hari & jam realtime sesuai wilayah Indonesia (WIB)
+  const getWibDate = (d: Date) => {
+    const utc = d.getTime() + d.getTimezoneOffset() * 60000;
+    return new Date(utc + 3600000 * 7);
+  };
+
+  const today = getWibDate(new Date());
   today.setHours(0, 0, 0, 0);
   const start = new Date(today);
   start.setDate(start.getDate() - (days - 1));
@@ -741,7 +747,13 @@ export async function getClickTrend(days = 7): Promise<DailyClick[]> {
     d.setDate(start.getDate() + i);
     const next = new Date(d);
     next.setDate(d.getDate() + 1);
-    const count = rows.filter((c) => c.createdAt >= d && c.createdAt < next).length;
+
+    // Filter baris log berdasarkan jam WIB
+    const count = rows.filter((c) => {
+      const wib = getWibDate(c.createdAt);
+      return wib >= d && wib < next;
+    }).length;
+
     out.push({ label: DAY_NAMES[d.getDay()], clicks: count });
   }
   return out;

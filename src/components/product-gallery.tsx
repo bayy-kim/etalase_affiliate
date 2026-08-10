@@ -4,9 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { ArrowUpRight, ChevronDown, Search, X } from "lucide-react";
+import { AnimatePresence } from "motion/react";
 
 import { ProductRow } from "@/components/product-row";
-import { getIcon, platformLabel } from "@/lib/icons";
+import { PixelLoadingOverlay } from "@/components/pixel-loading-overlay";
+import { getIcon, platformLabel, type PlatformKey } from "@/lib/icons";
 import type { Product } from "@/lib/data";
 import { cn } from "@/lib/utils";
 import { logSearchAction } from "@/server/actions/search";
@@ -29,6 +31,14 @@ export function ProductGallery({
   const initialQuery = searchParams.get("q") ?? "";
 
   const [query, setQuery] = useState(initialQuery);
+  const [navigatingProduct, setNavigatingProduct] = useState<{
+    label: string;
+    platform: PlatformKey;
+  } | null>(null);
+
+  const handleNavigate = (label: string, platform: PlatformKey) => {
+    setNavigatingProduct({ label, platform });
+  };
 
   useEffect(() => {
     setQuery(initialQuery);
@@ -118,6 +128,7 @@ export function ProductGallery({
               <ProductRow
                 key={it.id}
                 product={{ id: it.id, label: it.label, category: it.category, iconKey: it.iconKey, platform: it.platform, isMall: it.isMall, pos: it.pos }}
+                onNavigate={handleNavigate}
               />
             ))}
           </div>
@@ -132,6 +143,7 @@ export function ProductGallery({
                   key={it.id}
                   href={`/go/${it.id}`}
                   prefetch={false}
+                  onClick={() => handleNavigate(it.label, it.platform)}
                   className={cn(
                     "group flex items-center gap-4 rounded-3xl border border-slate-200/80 bg-white p-4.5 shadow-clay-card transition-all duration-200 hover:-translate-y-1 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2",
                     isShopee ? "focus-visible:outline-orange-500" : "focus-visible:outline-emerald-600"
@@ -205,6 +217,16 @@ export function ProductGallery({
           )}
         </>
       )}
+
+      {/* Fullscreen Pixel Art Loading Overlay */}
+      <AnimatePresence>
+        {navigatingProduct && (
+          <PixelLoadingOverlay
+            label={navigatingProduct.label}
+            platform={navigatingProduct.platform}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

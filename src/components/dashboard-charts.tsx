@@ -29,6 +29,15 @@ export function ClickTrendChart({
 }: {
   data: { label: string; clicks: number }[];
 }) {
+  const maxClicks = Math.max(1, ...data.map((d) => d.clicks));
+
+  const formatYAxis = (v: number) => {
+    if (maxClicks >= 1000) {
+      return (v / 1000).toFixed(1).replace(/\.0$/, "") + "k";
+    }
+    return String(Math.round(v));
+  };
+
   return (
     <ResponsiveContainer width="100%" height="100%">
       <AreaChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
@@ -49,7 +58,7 @@ export function ClickTrendChart({
           tick={{ fill: "#64748b", fontSize: 11, fontWeight: 600 }}
           axisLine={false}
           tickLine={false}
-          tickFormatter={(v: number) => `${Math.round(v / 1000)}k`}
+          tickFormatter={formatYAxis}
           width={34}
         />
         <Tooltip
@@ -126,6 +135,54 @@ export function PlatformBarChart({
           }}
         />
       </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+// Tambahkan grafik bulat (Donut Chart) Perbandingan Platform
+import { PieChart, Pie, Cell } from "recharts";
+
+const COLORS: Record<PlatformKey, string> = {
+  TIKTOK_SHOP: "#1db954", // hijau
+  SHOPEE: "#f97316", // oranye
+};
+
+export function PlatformPieChart({
+  data,
+}: {
+  data: { platform: PlatformKey; clicks: number }[];
+}) {
+  const cleanData = data.filter((d) => d.clicks > 0);
+
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      {cleanData.length === 0 ? (
+        <div className="flex h-full w-full items-center justify-center text-[13px] text-slate-400 font-semibold">
+          Belum ada data klik
+        </div>
+      ) : (
+        <PieChart>
+          <Pie
+            data={cleanData}
+            dataKey="clicks"
+            nameKey="platform"
+            cx="50%"
+            cy="50%"
+            innerRadius={60}
+            outerRadius={80}
+            paddingAngle={4}
+            cornerRadius={6}
+          >
+            {cleanData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={COLORS[entry.platform]} />
+            ))}
+          </Pie>
+          <Tooltip
+            contentStyle={tooltipStyle}
+            formatter={(value) => [`${value} klik`, "Rasio"]}
+          />
+        </PieChart>
+      )}
     </ResponsiveContainer>
   );
 }

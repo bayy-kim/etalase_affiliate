@@ -30,7 +30,16 @@ const PlatformBarChart = NextDynamic(
   () => import("@/components/dashboard-charts").then((m) => m.PlatformBarChart),
   {
     loading: () => (
-      <div className="h-full w-full animate-pulse rounded-xl bg-surface-variant" aria-hidden="true" />
+      <div className="h-full w-full animate-pulse rounded-3xl bg-slate-100" aria-hidden="true" />
+    ),
+  }
+);
+
+const PlatformPieChart = NextDynamic(
+  () => import("@/components/dashboard-charts").then((m) => m.PlatformPieChart),
+  {
+    loading: () => (
+      <div className="h-full w-full animate-pulse rounded-full bg-slate-100" aria-hidden="true" />
     ),
   }
 );
@@ -114,6 +123,45 @@ export default async function DashboardPage() {
         <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <ClickTrendCard trend7={trend7} trend30={trend30} />
 
+          {/* Donut Chart Rasio Platform */}
+          <div className="flex flex-col gap-4 rounded-3xl border border-slate-200/80 bg-white p-5 shadow-clay-card lg:p-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-[18px] font-extrabold tracking-tight text-slate-900">
+                Rasio Klik Platform
+              </h2>
+              <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold uppercase text-emerald-600">
+                Share
+              </span>
+            </div>
+            <div className="relative h-48 w-full">
+              <PlatformPieChart
+                data={[
+                  {
+                    platform: "TIKTOK_SHOP",
+                    clicks: products.filter((p) => p.platform === "TIKTOK_SHOP").reduce((s, p) => s + p.clickCount, 0),
+                  },
+                  {
+                    platform: "SHOPEE",
+                    clicks: products.filter((p) => p.platform === "SHOPEE").reduce((s, p) => s + p.clickCount, 0),
+                  },
+                ]}
+              />
+            </div>
+            <div className="flex items-center justify-center gap-4 text-[12px] font-bold">
+              <span className="flex items-center gap-1.5 text-emerald-600">
+                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                TikTok Shop
+              </span>
+              <span className="flex items-center gap-1.5 text-orange-500">
+                <span className="h-2.5 w-2.5 rounded-full bg-orange-500" />
+                Shopee
+              </span>
+            </div>
+          </div>
+        </section>
+
+        {/* Bar Chart Earnings */}
+        <section className="grid grid-cols-1 gap-6 lg:grid-cols-1">
           <div
             aria-labelledby="platform-heading"
             className="flex flex-col gap-4 rounded-3xl border border-slate-200/80 bg-white p-5 shadow-clay-card lg:p-6"
@@ -121,7 +169,7 @@ export default async function DashboardPage() {
             <h2 id="platform-heading" className="text-[20px] font-extrabold tracking-tight text-slate-900">
               Earnings by Platform
             </h2>
-            <div className="relative h-56 w-full lg:h-64">
+            <div className="relative h-48 w-full lg:h-56">
               <PlatformBarChart data={normalizePlatforms(earningsByPlatform)} />
             </div>
           </div>

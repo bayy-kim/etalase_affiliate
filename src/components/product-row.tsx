@@ -50,9 +50,21 @@ const platformStyles: Record<
   },
 };
 
-export function ProductRow({ product }: { product: ProductRowData }) {
+export function ProductRow({
+  product,
+  onNavigate,
+}: {
+  product: ProductRowData;
+  onNavigate?: (label: string, platform: PlatformKey) => void;
+}) {
   const Icon = getIcon(product.iconKey);
   const style = platformStyles[product.platform];
+
+  const handleClick = () => {
+    if (onNavigate) {
+      onNavigate(product.label, product.platform);
+    }
+  };
 
   return (
     <motion.div
@@ -63,6 +75,7 @@ export function ProductRow({ product }: { product: ProductRowData }) {
       <Link
         href={`/go/${product.id}`}
         prefetch={false}
+        onClick={handleClick}
         className={cn(
           "group flex items-center justify-between rounded-3xl border border-slate-200/80 bg-white p-4 shadow-clay-card transition-all duration-200 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2",
           style.ring

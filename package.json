@@ -16,9 +16,6 @@
     "db:push": "prisma db push",
     "db:clean": "tsx prisma/cleanup.ts"
   },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
-  },
   "dependencies": {
     "@prisma/client": "^6.5.0",
     "@vercel/blob": "^2.7.0",
@@ -35,7 +32,7 @@
     "qrcode.react": "^4.2.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "recharts": "^2.15.1",
+    "recharts": "^3.10.1",
     "tailwind-merge": "^2.6.0",
     "zod": "^3.24.2"
   },

@@ -104,7 +104,10 @@ export function PlatformBarChart({
         </defs>
         <Tooltip
           contentStyle={tooltipStyle}
-          formatter={(value: number) => [formatRupiah(value), "Earnings"]}
+          formatter={(value) => [
+            formatRupiah(typeof value === "number" ? value : Number(value ?? 0)),
+            "Earnings",
+          ]}
           cursor={{ fill: "rgba(99, 102, 241, 0.05)" }}
         />
         <Bar
@@ -119,7 +122,7 @@ export function PlatformBarChart({
             fill: "#64748b",
             fontSize: 11,
             fontWeight: 700,
-            formatter: (v: number) => (v / 1_000_000).toFixed(1) + "M",
+            formatter: (v) => (Number(v ?? 0) / 1_000_000).toFixed(1) + "M",
           }}
         />
       </BarChart>

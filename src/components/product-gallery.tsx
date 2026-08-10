@@ -2,113 +2,76 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import Fuse from "fuse.js";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { ArrowUpRight, ChevronDown, Search, X } from "lucide-react";
 
 import { ProductRow } from "@/components/product-row";
-import { categoryOptions, getIcon, platformLabel, type PlatformKey } from "@/lib/icons";
+import { getIcon, platformLabel } from "@/lib/icons";
 import type { Product } from "@/lib/data";
 import { cn } from "@/lib/utils";
 import { logSearchAction } from "@/server/actions/search";
 
-const PAGE_SIZE = 20;
-
-type IndexItem = {
-  id: string;
-  label: string;
-  category: string;
-  categoryLabel: string;
-  platform: PlatformKey;
-  iconKey: string;
-  isMall: boolean;
-  pos: number;
-};
-
-function categoryLabelOf(value: string): string {
-  return categoryOptions.find((c) => c.value === value)?.label ?? value;
-}
-
 export function ProductGallery({
   products,
-  activeCategory,
+  totalCount,
+  hasMore,
+  initialPage,
 }: {
   products: Product[];
-  activeCategory: string;
+  activeCategory?: string;
+  totalCount: number;
+  hasMore: boolean;
+  initialPage: number;
 }) {
-  const [query, setQuery] = useState("");
-  const [debounced, setDebounced] = useState("");
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const initialQuery = searchParams.get("q") ?? "";
+
+  const [query, setQuery] = useState(initialQuery);
+
+  useEffect(() => {
+    setQuery(initialQuery);
+  }, [initialQuery]);
 
   useEffect(() => {
     const t = setTimeout(() => {
-      setDebounced(query);
-      if (query.trim().length >= 2) {
-        logSearchAction(query).catch(() => {});
+      const trimmed = query.trim();
+      const currentQ = searchParams.get("q") ?? "";
+      if (trimmed !== currentQ) {
+        const params = new URLSearchParams(searchParams.toString());
+        if (trimmed) {
+          params.set("q", trimmed);
+          logSearchAction(trimmed).catch(() => {});
+        } else {
+          params.delete("q");
+        }
+        params.delete("page"); // Reset page on new search
+        const qs = params.toString();
+        router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
       }
-    }, 400);
+    }, 350);
     return () => clearTimeout(t);
-  }, [query]);
+  }, [query, pathname, router, searchParams]);
 
-  // Reset pagination when category or search changes
-  useEffect(() => {
-    setVisibleCount(PAGE_SIZE);
-  }, [activeCategory, debounced]);
+  const loadMore = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", String(initialPage + 1));
+    const qs = params.toString();
+    router.replace(`${pathname}?${qs}`, { scroll: false });
+  };
 
-  const indexItems = useMemo<IndexItem[]>(
+  const results = useMemo(
     () =>
-      products.map((p) => ({
-        id: p.id,
-        label: p.label,
-        category: p.category,
-        categoryLabel: categoryLabelOf(p.category),
-        platform: p.platform,
-        iconKey: p.iconKey,
-        isMall: p.isMall,
-        pos: 0,
+      products.map((p, i) => ({
+        ...p,
+        pos: (initialPage - 1) * 20 + i + 1,
       })),
-    [products]
+    [products, initialPage]
   );
 
-  const byCategory = useMemo(
-    () =>
-      (activeCategory === "all"
-        ? indexItems
-        : indexItems.filter((it) => it.category === activeCategory)
-      ).map((it, i) => ({ ...it, pos: i + 1 })),
-    [indexItems, activeCategory]
-  );
-
-  const results = useMemo(() => {
-    const q = debounced.trim();
-    if (!q) return byCategory;
-
-    const numeric = /^\d{1,3}$/.test(q) ? parseInt(q, 10) : null;
-    if (numeric !== null) {
-      const positional = byCategory.filter((it) => it.pos === numeric);
-      if (positional.length > 0) return positional;
-    }
-
-    const fuse = new Fuse(byCategory, {
-      keys: [
-        { name: "label", weight: 0.6 },
-        { name: "categoryLabel", weight: 0.25 },
-        { name: "platform", weight: 0.15 },
-      ],
-      threshold: 0.4,
-      ignoreLocation: true,
-      minMatchCharLength: 1,
-    });
-    return fuse.search(q).map((r) => r.item);
-  }, [debounced, byCategory]);
-
-  const visibleResults = useMemo(
-    () => results.slice(0, visibleCount),
-    [results, visibleCount]
-  );
-
-  const hasQuery = debounced.trim().length > 0;
+  const hasQuery = query.trim().length > 0;
   const empty = results.length === 0;
-  const hasMore = visibleCount < results.length;
 
   return (
     <div className="flex w-full flex-col gap-4">
@@ -139,7 +102,7 @@ export function ProductGallery({
 
       {hasQuery && (
         <p className="text-[13px] font-semibold text-slate-500" aria-live="polite">
-          {empty ? "Tidak ditemukan." : `${results.length} hasil`}
+          {empty ? "Tidak ditemukan." : `${totalCount} hasil`}
         </p>
       )}
 
@@ -151,7 +114,7 @@ export function ProductGallery({
         <>
           {/* List mobile */}
           <div className="flex flex-col gap-3.5 lg:hidden">
-            {visibleResults.map((it) => (
+            {results.map((it) => (
               <ProductRow
                 key={it.id}
                 product={{ id: it.id, label: it.label, category: it.category, iconKey: it.iconKey, platform: it.platform, isMall: it.isMall, pos: it.pos }}
@@ -161,7 +124,7 @@ export function ProductGallery({
 
           {/* Grid desktop */}
           <div className="hidden grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 lg:grid">
-            {visibleResults.map((it) => {
+            {results.map((it) => {
               const Icon = getIcon(it.iconKey);
               const isShopee = it.platform === "SHOPEE";
               return (
@@ -226,17 +189,17 @@ export function ProductGallery({
 
           {/* Load More Button for 100+ items */}
           {hasMore && (
-            <div className="mt-4 flex flex-col items-center justify-center gap-2">
+            <div className="mt-6 flex flex-col items-center justify-center gap-2">
               <button
                 type="button"
-                onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
+                onClick={loadMore}
                 className="flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-6 py-3 text-[14px] font-bold text-emerald-700 shadow-sm transition-all hover:bg-emerald-600 hover:text-white hover:shadow-md active:scale-98"
               >
-                <span>Tampilkan Lebih Banyak ({results.length - visibleCount} produk tersisa)</span>
+                <span>Tampilkan Lebih Banyak ({totalCount - results.length} produk tersisa)</span>
                 <ChevronDown className="h-4 w-4" aria-hidden="true" />
               </button>
               <p className="text-[12px] font-semibold text-slate-400">
-                Menampilkan {visibleResults.length} dari {results.length} produk
+                Menampilkan {results.length} dari {totalCount} produk
               </p>
             </div>
           )}

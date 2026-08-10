@@ -4,15 +4,41 @@ import { Plus } from "lucide-react";
 
 import { AdminShell } from "@/components/admin-shell";
 import { ProductBrowser } from "./product-browser";
-import { getAllProducts } from "@/lib/data";
-import { formatNumber } from "@/lib/format";
+import { getAllProductsPaginated } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = { title: "Produk" };
 
-export default async function ProductsPage() {
-  const products = await getAllProducts();
+export default async function ProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    k?: string;
+    p?: string;
+    s?: string;
+    sort?: string;
+    q?: string;
+    page?: string;
+  }>;
+}) {
+  const params = await searchParams;
+  const category = params.k ?? "all";
+  const platform = params.p ?? "all";
+  const status = params.s ?? "all";
+  const sort = params.sort ?? "order";
+  const query = params.q ?? "";
+  const page = parseInt(params.page ?? "1", 10) || 1;
+
+  const { products, totalCount, hasMore } = await getAllProductsPaginated({
+    page,
+    limit: 21, // Kelipatan 3 untuk grid desktop yang seimbang
+    category,
+    platform,
+    status,
+    sort,
+    search: query,
+  });
 
   return (
     <AdminShell
@@ -21,17 +47,19 @@ export default async function ProductsPage() {
       actions={
         <Link
           href="/admin/products/new"
-          className="flex h-11 w-11 items-center justify-center rounded-full bg-primary-container text-background-base transition-transform hover:bg-primary-hover active:scale-95 lg:h-10 lg:w-auto lg:gap-2 lg:rounded-xl lg:px-4 lg:text-[15px] lg:font-[600] lg:text-white"
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-indigo-600 text-white transition-transform hover:bg-indigo-700 active:scale-95 lg:h-10 lg:w-auto lg:gap-2 lg:rounded-xl lg:px-4 lg:text-[15px] lg:font-[600]"
         >
           <Plus className="h-5 w-5" aria-hidden="true" />
           <span className="hidden lg:inline">Tambah Produk</span>
         </Link>
       }
     >
-      <ProductBrowser products={products} />
-      <p className="mt-6 text-[12px] text-text-secondary">
-        Total {formatNumber(products.length)} produk tersimpan.
-      </p>
+      <ProductBrowser
+        products={products}
+        totalCount={totalCount}
+        hasMore={hasMore}
+        currentPage={page}
+      />
     </AdminShell>
   );
 }

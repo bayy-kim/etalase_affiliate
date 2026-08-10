@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { ArrowDown, ArrowUp, MousePointerClick, Plus, Search } from "lucide-react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, MousePointerClick, Plus, Search } from "lucide-react";
 
 import { ProductActions } from "@/components/product-actions";
 import { Select } from "@/components/ui/select";
@@ -15,30 +15,108 @@ import { reorderProductsAction } from "@/server/actions/product";
 
 type SortKey = "order" | "name" | "clicks";
 
-export function ProductBrowser({ products }: { products: Product[] }) {
+export function ProductBrowser({
+  products,
+  totalCount,
+  hasMore,
+  currentPage,
+}: {
+  products: Product[];
+  totalCount: number;
+  hasMore: boolean;
+  currentPage: number;
+}) {
   const router = useRouter();
-  const [query, setQuery] = useState("");
-  const [category, setCategory] = useState("all");
-  const [platform, setPlatform] = useState("all");
-  const [status, setStatus] = useState("all");
-  const [sort, setSort] = useState<SortKey>("order");
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const initialQuery = searchParams.get("q") ?? "";
+  const initialCategory = searchParams.get("k") ?? "all";
+  const initialPlatform = searchParams.get("p") ?? "all";
+  const initialStatus = searchParams.get("s") ?? "all";
+  const initialSort = (searchParams.get("sort") as SortKey) ?? "order";
+
+  const [query, setQuery] = useState(initialQuery);
+  const [category, setCategory] = useState(initialCategory);
+  const [platform, setPlatform] = useState(initialPlatform);
+  const [status, setStatus] = useState(initialStatus);
+  const [sort, setSort] = useState<SortKey>(initialSort);
   const [reordering, setReordering] = useState(false);
+
+  useEffect(() => {
+    setQuery(initialQuery);
+    setCategory(initialCategory);
+    setPlatform(initialPlatform);
+    setStatus(initialStatus);
+    setSort(initialSort);
+  }, [initialQuery, initialCategory, initialPlatform, initialStatus, initialSort]);
+
+  const updateFilters = (newParams: Record<string, string | null>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    Object.entries(newParams).forEach(([key, val]) => {
+      if (!val || val === "all" || (key === "sort" && val === "order")) {
+        params.delete(key);
+      } else {
+        params.set(key, val);
+      }
+    });
+    params.delete("page"); // Reset page when filter changes
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const trimmed = query.trim();
+      const currentQ = searchParams.get("q") ?? "";
+      if (trimmed !== currentQ) {
+        updateFilters({ q: trimmed });
+      }
+    }, 350);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query]);
+
+  const handleCategoryChange = (val: string) => {
+    setCategory(val);
+    updateFilters({ k: val });
+  };
+
+  const handlePlatformChange = (val: string) => {
+    setPlatform(val);
+    updateFilters({ p: val });
+  };
+
+  const handleStatusChange = (val: string) => {
+    setStatus(val);
+    updateFilters({ s: val });
+  };
+
+  const handleSortChange = (val: SortKey) => {
+    setSort(val);
+    updateFilters({ sort: val });
+  };
+
+  const changePage = (newPage: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", String(newPage));
+    const qs = params.toString();
+    router.replace(`${pathname}?${qs}`, { scroll: false });
+  };
 
   const moveProduct = async (index: number, direction: "up" | "down") => {
     const targetIndex = direction === "up" ? index - 1 : index + 1;
-    if (targetIndex < 0 || targetIndex >= list.length) return;
+    if (targetIndex < 0 || targetIndex >= products.length) return;
 
     setReordering(true);
 
-    // Salin list saat ini untuk di-reorder menggunakan Array Splice (logika Insertion)
-    const rearranged = [...list];
+    const rearranged = [...products];
     const [movedItem] = rearranged.splice(index, 1);
     rearranged.splice(targetIndex, 0, movedItem);
 
-    // Re-indexing: Berikan sortOrder yang rapi berurutan mulai dari 0, 1, 2, dst.
     const updates = rearranged.map((item, idx) => ({
       id: item.id,
-      sortOrder: idx,
+      sortOrder: (currentPage - 1) * 21 + idx,
     }));
 
     await reorderProductsAction(updates);
@@ -46,30 +124,9 @@ export function ProductBrowser({ products }: { products: Product[] }) {
     router.refresh();
   };
 
-  const list = useMemo(() => {
-    let out = products;
-    if (category !== "all") out = out.filter((p) => p.category === category);
-    if (platform !== "all") out = out.filter((p) => p.platform === platform);
-    if (status === "active") out = out.filter((p) => p.isActive);
-    if (status === "inactive") out = out.filter((p) => !p.isActive);
-    const q = query.trim().toLowerCase();
-    if (q) {
-      out = out.filter(
-        (p) => p.label.toLowerCase().includes(q) || (p.internalNote ?? "").toLowerCase().includes(q)
-      );
-    }
-    switch (sort) {
-      case "name":
-        out = [...out].sort((a, b) => a.label.localeCompare(b.label, "id"));
-        break;
-      case "clicks":
-        out = [...out].sort((a, b) => b.clickCount - a.clickCount);
-        break;
-      default:
-        out = [...out].sort((a, b) => a.sortOrder - b.sortOrder);
-    }
-    return out;
-  }, [products, query, category, platform, status, sort]);
+  // Paginasi & Pencarian sepenuhnya ditangani oleh Server Action melalui params URL.
+  // Variabel `list` langsung menggunakan properti `products` ter-render server-side.
+  const list = products;
 
   return (
     <div className="flex flex-col gap-4">
@@ -87,23 +144,23 @@ export function ProductBrowser({ products }: { products: Product[] }) {
           />
         </div>
         <div className="grid grid-cols-2 gap-2 lg:flex">
-          <Select value={category} onChange={(e) => setCategory(e.target.value)} aria-label="Filter kategori">
+          <Select value={category} onChange={(e) => handleCategoryChange(e.target.value)} aria-label="Filter kategori">
             <option value="all">Semua Kategori</option>
             {categorySelectOptions.map((c) => (
               <option key={c.value} value={c.value}>{c.label}</option>
             ))}
           </Select>
-          <Select value={platform} onChange={(e) => setPlatform(e.target.value)} aria-label="Filter platform">
+          <Select value={platform} onChange={(e) => handlePlatformChange(e.target.value)} aria-label="Filter platform">
             <option value="all">Semua Platform</option>
             <option value="TIKTOK_SHOP">TikTok Shop</option>
             <option value="SHOPEE">Shopee</option>
           </Select>
-          <Select value={status} onChange={(e) => setStatus(e.target.value)} aria-label="Filter status">
+          <Select value={status} onChange={(e) => handleStatusChange(e.target.value)} aria-label="Filter status">
             <option value="all">Semua Status</option>
             <option value="active">Aktif</option>
             <option value="inactive">Nonaktif</option>
           </Select>
-          <Select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} aria-label="Urutkan">
+          <Select value={sort} onChange={(e) => handleSortChange(e.target.value as SortKey)} aria-label="Urutkan">
             <option value="order">Urutan</option>
             <option value="name">Nama A–Z</option>
             <option value="clicks">Klik Tertinggi</option>
@@ -230,6 +287,35 @@ export function ProductBrowser({ products }: { products: Product[] }) {
           })}
         </div>
       )}
+      {/* Paginasi Admin */}
+      <div className="mt-4 flex flex-col items-center justify-between gap-4 border-t border-slate-200/80 pt-4 sm:flex-row">
+        <p className="text-[13px] font-semibold text-slate-500">
+          Menampilkan {list.length} dari {totalCount} produk tersimpan
+        </p>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            disabled={currentPage <= 1}
+            onClick={() => changePage(currentPage - 1)}
+            className="flex h-10 items-center gap-1 rounded-xl border border-slate-200 bg-white px-3.5 text-[13px] font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50 disabled:pointer-events-none disabled:opacity-40"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            <span>Sebelumnya</span>
+          </button>
+          <span className="px-2 font-mono text-[14px] font-bold text-indigo-600">
+            {currentPage}
+          </span>
+          <button
+            type="button"
+            disabled={!hasMore}
+            onClick={() => changePage(currentPage + 1)}
+            className="flex h-10 items-center gap-1 rounded-xl border border-slate-200 bg-white px-3.5 text-[13px] font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50 disabled:pointer-events-none disabled:opacity-40"
+          >
+            <span>Selanjutnya</span>
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

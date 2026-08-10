@@ -308,18 +308,51 @@ function toProduct(p: ProductRowInput): Product {
 }
 
 export async function getPublicProducts(): Promise<Product[]> {
+  return getPublicProductsPaginated({ limit: 1000 }).then((r) => r.products);
+}
+
+export async function getPublicProductsPaginated({
+  page = 1,
+  limit = 20,
+  category = "all",
+  search = "",
+}: {
+  page?: number;
+  limit?: number;
+  category?: string;
+  search?: string;
+} = {}): Promise<{ products: Product[]; totalCount: number; hasMore: boolean }> {
+  const cleanSearch = search.trim();
+  
   if (isDb()) {
-    const rows = await prisma.product.findMany({
-      where: { isActive: true },
-      orderBy: { sortOrder: "asc" },
-      select: {
-        id: true, label: true, internalNote: true, category: true, iconKey: true,
-        platform: true, affiliateUrl: true, income: true, isMall: true,
-        isActive: true, sortOrder: true, createdAt: true, updatedAt: true,
-        _count: { select: { clicks: true } },
-      },
-    });
-    return rows.map((r) =>
+    const whereClause: Record<string, unknown> = { isActive: true };
+    if (category !== "all") {
+      whereClause.category = category;
+    }
+    if (cleanSearch) {
+      whereClause.label = {
+        contains: cleanSearch,
+        mode: "insensitive",
+      };
+    }
+
+    const [rows, totalCount] = await Promise.all([
+      prisma.product.findMany({
+        where: whereClause,
+        orderBy: { sortOrder: "asc" },
+        skip: (page - 1) * limit,
+        take: limit,
+        select: {
+          id: true, label: true, internalNote: true, category: true, iconKey: true,
+          platform: true, affiliateUrl: true, income: true, isMall: true,
+          isActive: true, sortOrder: true, createdAt: true, updatedAt: true,
+          _count: { select: { clicks: true } },
+        },
+      }),
+      prisma.product.count({ where: whereClause }),
+    ]);
+
+    const products = rows.map((r) =>
       toProduct({
         id: r.id, label: r.label, internalNote: r.internalNote, category: r.category,
         iconKey: r.iconKey, platform: r.platform as PlatformKey, affiliateUrl: r.affiliateUrl, income: r.income,
@@ -328,33 +361,105 @@ export async function getPublicProducts(): Promise<Product[]> {
         clicks: r._count.clicks,
       })
     );
+
+    return {
+      products,
+      totalCount,
+      hasMore: page * limit < totalCount,
+    };
   }
 
-  return mockProducts
-    .filter((p) => p.isActive)
-    .sort((a, b) => a.sortOrder - b.sortOrder)
-    .map((p) =>
-      toProduct({
-        ...p,
-        createdAt: toIso(p.createdAt),
-        updatedAt: toIso(p.updatedAt),
-        clicks: mockClicks.filter((c) => c.productId === p.id).length,
-      })
-    );
+  // Mock implementation
+  let filtered = mockProducts.filter((p) => p.isActive);
+  if (category !== "all") {
+    filtered = filtered.filter((p) => p.category === category);
+  }
+  if (cleanSearch) {
+    const q = cleanSearch.toLowerCase();
+    filtered = filtered.filter((p) => p.label.toLowerCase().includes(q));
+  }
+
+  const sorted = [...filtered].sort((a, b) => a.sortOrder - b.sortOrder);
+  const totalCount = sorted.length;
+  const start = (page - 1) * limit;
+  const sliced = sorted.slice(start, start + limit);
+
+  const products = sliced.map((p) =>
+    toProduct({
+      ...p,
+      createdAt: toIso(p.createdAt),
+      updatedAt: toIso(p.updatedAt),
+      clicks: mockClicks.filter((c) => c.productId === p.id).length,
+    })
+  );
+
+  return {
+    products,
+    totalCount,
+    hasMore: start + limit < totalCount,
+  };
 }
 
 export async function getAllProducts(): Promise<Product[]> {
+  return getAllProductsPaginated({ limit: 1000 }).then((r) => r.products);
+}
+
+export async function getAllProductsPaginated({
+  page = 1,
+  limit = 20,
+  category = "all",
+  platform = "all",
+  status = "all",
+  sort = "order",
+  search = "",
+}: {
+  page?: number;
+  limit?: number;
+  category?: string;
+  platform?: string;
+  status?: string;
+  sort?: string;
+  search?: string;
+} = {}): Promise<{ products: Product[]; totalCount: number; hasMore: boolean }> {
+  const cleanSearch = search.trim();
+
   if (isDb()) {
-    const rows = await prisma.product.findMany({
-      orderBy: { sortOrder: "asc" },
-      select: {
-        id: true, label: true, internalNote: true, category: true, iconKey: true,
-        platform: true, affiliateUrl: true, income: true, isMall: true,
-        isActive: true, sortOrder: true, createdAt: true, updatedAt: true,
-        _count: { select: { clicks: true } },
-      },
-    });
-    return rows.map((r) =>
+    const whereClause: Record<string, unknown> = {};
+    if (category !== "all") whereClause.category = category;
+    if (platform !== "all") whereClause.platform = platform;
+    if (status === "active") whereClause.isActive = true;
+    if (status === "inactive") whereClause.isActive = false;
+    if (cleanSearch) {
+      whereClause.OR = [
+        { label: { contains: cleanSearch, mode: "insensitive" } },
+        { internalNote: { contains: cleanSearch, mode: "insensitive" } },
+      ];
+    }
+
+    let orderBy: Record<string, unknown> = { sortOrder: "asc" };
+    if (sort === "name") {
+      orderBy = { label: "asc" };
+    } else if (sort === "clicks") {
+      orderBy = { clicks: { _count: "desc" } };
+    }
+
+    const [rows, totalCount] = await Promise.all([
+      prisma.product.findMany({
+        where: whereClause,
+        orderBy,
+        skip: (page - 1) * limit,
+        take: limit,
+        select: {
+          id: true, label: true, internalNote: true, category: true, iconKey: true,
+          platform: true, affiliateUrl: true, income: true, isMall: true,
+          isActive: true, sortOrder: true, createdAt: true, updatedAt: true,
+          _count: { select: { clicks: true } },
+        },
+      }),
+      prisma.product.count({ where: whereClause }),
+    ]);
+
+    const products = rows.map((r) =>
       toProduct({
         id: r.id, label: r.label, internalNote: r.internalNote, category: r.category,
         iconKey: r.iconKey, platform: r.platform as PlatformKey, affiliateUrl: r.affiliateUrl, income: r.income,
@@ -363,18 +468,57 @@ export async function getAllProducts(): Promise<Product[]> {
         clicks: r._count.clicks,
       })
     );
+
+    return {
+      products,
+      totalCount,
+      hasMore: page * limit < totalCount,
+    };
   }
 
-  return [...mockProducts]
-    .sort((a, b) => a.sortOrder - b.sortOrder)
-    .map((p) =>
-      toProduct({
-        ...p,
-        createdAt: toIso(p.createdAt),
-        updatedAt: toIso(p.updatedAt),
-        clicks: mockClicks.filter((c) => c.productId === p.id).length,
-      })
+  // Mock implementation
+  let filtered = [...mockProducts];
+  if (category !== "all") filtered = filtered.filter((p) => p.category === category);
+  if (platform !== "all") filtered = filtered.filter((p) => p.platform === platform);
+  if (status === "active") filtered = filtered.filter((p) => p.isActive);
+  if (status === "inactive") filtered = filtered.filter((p) => !p.isActive);
+  if (cleanSearch) {
+    const q = cleanSearch.toLowerCase();
+    filtered = filtered.filter(
+      (p) => p.label.toLowerCase().includes(q) || (p.internalNote ?? "").toLowerCase().includes(q)
     );
+  }
+
+  if (sort === "name") {
+    filtered.sort((a, b) => a.label.localeCompare(b.label, "id"));
+  } else if (sort === "clicks") {
+    filtered.sort(
+      (a, b) =>
+        mockClicks.filter((c) => c.productId === b.id).length -
+        mockClicks.filter((c) => c.productId === a.id).length
+    );
+  } else {
+    filtered.sort((a, b) => a.sortOrder - b.sortOrder);
+  }
+
+  const totalCount = filtered.length;
+  const start = (page - 1) * limit;
+  const sliced = filtered.slice(start, start + limit);
+
+  const products = sliced.map((p) =>
+    toProduct({
+      ...p,
+      createdAt: toIso(p.createdAt),
+      updatedAt: toIso(p.updatedAt),
+      clicks: mockClicks.filter((c) => c.productId === p.id).length,
+    })
+  );
+
+  return {
+    products,
+    totalCount,
+    hasMore: start + limit < totalCount,
+  };
 }
 
 export async function getProduct(id: string): Promise<Product | null> {

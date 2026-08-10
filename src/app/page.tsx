@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { ArrowRight, Package, MousePointerClick } from "lucide-react";
 
-import { getPublicProducts, getTotalClicks, getProfile } from "@/lib/data";
+import { getPublicProductsPaginated, getTotalClicks, getProfile } from "@/lib/data";
 import { formatNumber } from "@/lib/format";
 import { CategoryTabs } from "@/components/category-tabs";
 import { ProductGallery } from "@/components/product-gallery";
@@ -20,13 +20,20 @@ export const metadata: Metadata = {
 export default async function StorefrontPage({
   searchParams,
 }: {
-  searchParams: Promise<{ k?: string }>;
+  searchParams: Promise<{ k?: string; q?: string; page?: string }>;
 }) {
-  const { k } = await searchParams;
-  const active = k ?? "all";
+  const params = await searchParams;
+  const activeCategory = params.k ?? "all";
+  const searchQuery = params.q ?? "";
+  const page = parseInt(params.page ?? "1", 10) || 1;
 
-  const [products, totalClicks, profile] = await Promise.all([
-    getPublicProducts(),
+  const [{ products, totalCount, hasMore }, totalClicks, profile] = await Promise.all([
+    getPublicProductsPaginated({
+      page,
+      limit: 20,
+      category: activeCategory,
+      search: searchQuery,
+    }),
     getTotalClicks(),
     getProfile(),
   ]);
@@ -78,7 +85,7 @@ export default async function StorefrontPage({
           <div className="mt-2 flex items-center justify-center gap-3" aria-label="Statistik etalase">
             <span className="inline-flex items-center gap-2 rounded-2xl border border-slate-200/80 bg-slate-50 px-4 py-2 text-[13px] font-semibold text-slate-600 shadow-sm transition-all hover:bg-slate-100">
               <Package className="h-4 w-4 text-emerald-600" aria-hidden="true" />
-              <strong className="text-slate-900 font-bold">{formatNumber(products.length)}</strong> Produk
+              <strong className="text-slate-900 font-bold">{formatNumber(totalCount)}</strong> Produk
             </span>
             <span className="inline-flex items-center gap-2 rounded-2xl border border-slate-200/80 bg-slate-50 px-4 py-2 text-[13px] font-semibold text-slate-600 shadow-sm transition-all hover:bg-slate-100">
               <MousePointerClick className="h-4 w-4 text-emerald-600" aria-hidden="true" />
@@ -90,7 +97,7 @@ export default async function StorefrontPage({
         {/* Filter kategori */}
         <section className="mt-6 w-full" aria-label="Kategori produk">
           <Suspense fallback={null}>
-            <CategoryTabs active={active} />
+            <CategoryTabs active={activeCategory} />
           </Suspense>
         </section>
 
@@ -104,7 +111,13 @@ export default async function StorefrontPage({
               Top Picks
             </span>
           </div>
-          <ProductGallery products={products} activeCategory={active} />
+          <ProductGallery
+            products={products}
+            activeCategory={activeCategory}
+            totalCount={totalCount}
+            hasMore={hasMore}
+            initialPage={page}
+          />
         </section>
       </div>
 

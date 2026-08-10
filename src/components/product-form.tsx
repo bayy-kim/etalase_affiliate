@@ -30,6 +30,7 @@ export function ProductForm({
   const [state, formAction, pending] = useActionState(action, initial);
   const [platform, setPlatform] = useState<PlatformKey>(product?.platform ?? "TIKTOK_SHOP");
   const [iconKey, setIconKey] = useState(product?.iconKey ?? "sparkles");
+  const [isMall, setIsMall] = useState(product?.isMall ?? false);
   const [isActive, setIsActive] = useState(product?.isActive ?? true);
 
   const err = state && "fieldErrors" in state ? state.fieldErrors : undefined;
@@ -212,6 +213,24 @@ export function ProductForm({
           />
         </div>
       </div>
+
+      {/* Mall / Official Store */}
+      <div className="flex items-center justify-between rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
+        <div className="flex flex-col">
+          <span className="text-[15px] font-semibold text-slate-800">
+            Toko Resmi / Official Mall
+          </span>
+          <span className="text-[13px] text-slate-500">
+            Tampilkan badge Mall pada produk ini
+          </span>
+        </div>
+        <Switch
+          checked={isMall}
+          onCheckedChange={setIsMall}
+          aria-label="Toko Resmi Mall"
+        />
+      </div>
+      <input type="hidden" name="isMall" value={isMall ? "on" : "off"} />
 
       {/* Aktif */}
       <div className="flex items-center justify-between rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">

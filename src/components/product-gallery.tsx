@@ -9,6 +9,7 @@ import { ProductRow } from "@/components/product-row";
 import { categoryOptions, getIcon, platformLabel, type PlatformKey } from "@/lib/icons";
 import type { Product } from "@/lib/data";
 import { cn } from "@/lib/utils";
+import { logSearchAction } from "@/server/actions/search";
 
 const PAGE_SIZE = 20;
 
@@ -19,6 +20,7 @@ type IndexItem = {
   categoryLabel: string;
   platform: PlatformKey;
   iconKey: string;
+  isMall: boolean;
   pos: number;
 };
 
@@ -38,7 +40,12 @@ export function ProductGallery({
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   useEffect(() => {
-    const t = setTimeout(() => setDebounced(query), 180);
+    const t = setTimeout(() => {
+      setDebounced(query);
+      if (query.trim().length >= 2) {
+        logSearchAction(query).catch(() => {});
+      }
+    }, 400);
     return () => clearTimeout(t);
   }, [query]);
 
@@ -56,6 +63,7 @@ export function ProductGallery({
         categoryLabel: categoryLabelOf(p.category),
         platform: p.platform,
         iconKey: p.iconKey,
+        isMall: p.isMall,
         pos: 0,
       })),
     [products]
@@ -146,7 +154,7 @@ export function ProductGallery({
             {visibleResults.map((it) => (
               <ProductRow
                 key={it.id}
-                product={{ id: it.id, label: it.label, category: it.category, iconKey: it.iconKey, platform: it.platform, pos: it.pos }}
+                product={{ id: it.id, label: it.label, category: it.category, iconKey: it.iconKey, platform: it.platform, isMall: it.isMall, pos: it.pos }}
               />
             ))}
           </div>
@@ -185,13 +193,20 @@ export function ProductGallery({
                     <Icon className="h-5 w-5" aria-hidden="true" />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span
-                      className={cn(
-                        "block truncate text-[15px] font-bold leading-5 text-slate-800 transition-colors",
-                        isShopee ? "group-hover:text-orange-600" : "group-hover:text-emerald-600"
+                    <span className="flex items-center gap-1.5 min-w-0">
+                      <span
+                        className={cn(
+                          "block truncate text-[15px] font-bold leading-5 text-slate-800 transition-colors",
+                          isShopee ? "group-hover:text-orange-600" : "group-hover:text-emerald-600"
+                        )}
+                      >
+                        {it.label}
+                      </span>
+                      {it.isMall && (
+                        <span className="shrink-0 rounded-full bg-rose-500 px-2 py-0.5 text-[9px] font-extrabold uppercase text-white tracking-wider shadow-sm">
+                          MALL
+                        </span>
                       )}
-                    >
-                      {it.label}
                     </span>
                     <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
                       {platformLabel[it.platform]}

@@ -41,6 +41,7 @@ export async function createProductAction(_: ActionState, formData: FormData): P
     platform: formData.get("platform"),
     affiliateUrl: formData.get("affiliateUrl"),
     income: formData.get("income") || null,
+    isMall: formData.get("isMall") === "on",
     isActive: formData.get("isActive") === "on",
     sortOrder: formData.get("sortOrder") || undefined,
   });
@@ -75,6 +76,7 @@ export async function updateProductAction(
     platform: formData.get("platform"),
     affiliateUrl: formData.get("affiliateUrl"),
     income: formData.get("income") || null,
+    isMall: formData.get("isMall") === "on",
     isActive: formData.get("isActive") === "on",
     sortOrder: formData.get("sortOrder") || undefined,
   });

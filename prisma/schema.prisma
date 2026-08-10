@@ -21,6 +21,7 @@ model Product {
   platform     Platform
   affiliateUrl String
   income       Int? // Pendapatan dari produk (Rupiah, integer) — sinkron dengan EarningEntry
+  isMall       Boolean        @default(false) // Mall / Official Store Badge
   isActive     Boolean        @default(true)
   sortOrder    Int            @default(0)
   clicks       ClickLog[]
@@ -84,4 +85,13 @@ model AuditLog {
   createdAt  DateTime @default(now())
 
   @@index([adminId, createdAt])
+}
+
+model SearchLog {
+  id        String   @id @default(cuid())
+  query     String
+  createdAt DateTime @default(now())
+
+  @@index([query])
+  @@index([createdAt])
 }

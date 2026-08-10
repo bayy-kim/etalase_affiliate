@@ -191,6 +191,11 @@ export function ProductBrowser({ products }: { products: Product[] }) {
                       )}
                     </div>
                     <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                      {product.isMall && (
+                        <span className="inline-block rounded-full bg-rose-500 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-sm">
+                          MALL
+                        </span>
+                      )}
                       <span className="inline-block rounded-full border border-indigo-100 bg-indigo-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-600">
                         {platformUppercase[product.platform]}
                       </span>

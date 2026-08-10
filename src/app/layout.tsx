@@ -34,11 +34,20 @@ export const metadata: Metadata = {
     siteName: "Etalase Affiliate",
     locale: "id_ID",
     type: "website",
+    images: [
+      {
+        url: "https://etalaseaffiliate.vercel.app/api/og",
+        width: 1200,
+        height: 630,
+        alt: "Etalase Affiliate Social Card",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Etalase Affiliate — Kurasi Rekomendasi Produk Terbaik",
     description: "Kumpulan rekomendasi produk pilihan di TikTok Shop & Shopee. Tap produk untuk langsung checkout aman di aplikasi resmi.",
+    images: ["https://etalaseaffiliate.vercel.app/api/og"],
   },
 };
 

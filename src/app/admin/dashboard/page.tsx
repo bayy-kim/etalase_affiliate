@@ -12,12 +12,15 @@ import {
 import { AdminShell } from "@/components/admin-shell";
 import { StatCard } from "@/components/stat-card";
 import { ClickTrendCard } from "@/components/click-trend-card";
+import { QrShareWidget } from "@/components/qr-share-widget";
+import { SearchAnalyticsCard } from "@/components/search-analytics-card";
 import {
   getAllProducts,
   getClickTrend,
   getClickDelta,
   getEarningsStats,
   getEarningsDelta,
+  getPopularSearches,
 } from "@/lib/data";
 import { formatNumber, formatRupiah, formatRupiahCompact } from "@/lib/format";
 import { platformLabel, type PlatformKey } from "@/lib/icons";
@@ -37,7 +40,9 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Dashboard" };
 
 export default async function DashboardPage() {
-  const [products, trend7, trend30, clickDelta, earningsByPlatform, earningsDelta] =
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://etalaseaffiliate.vercel.app";
+
+  const [products, trend7, trend30, clickDelta, earningsByPlatform, earningsDelta, popularSearches] =
     await Promise.all([
       getAllProducts(),
       getClickTrend(7),
@@ -45,6 +50,7 @@ export default async function DashboardPage() {
       getClickDelta(7),
       getEarningsStats(),
       getEarningsDelta(),
+      getPopularSearches(6),
     ]);
 
   const activeCount = products.filter((p) => p.isActive).length;
@@ -119,6 +125,16 @@ export default async function DashboardPage() {
               <PlatformBarChart data={normalizePlatforms(earningsByPlatform)} />
             </div>
           </div>
+        </section>
+
+        {/* QR Share Widget */}
+        <section aria-label="QR Code dan Bagikan">
+          <QrShareWidget appUrl={appUrl} />
+        </section>
+
+        {/* Search Analytics Card */}
+        <section aria-label="Kata kunci populer pengunjung">
+          <SearchAnalyticsCard searches={popularSearches} />
         </section>
 
         {/* Top products — daftar mobile */}

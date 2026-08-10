@@ -17,6 +17,7 @@ export type Product = {
   platform: PlatformKey;
   affiliateUrl: string;
   income: number | null;
+  isMall: boolean;
   isActive: boolean;
   sortOrder: number;
   clickCount: number;
@@ -279,6 +280,7 @@ type ProductRowInput = {
   platform: PlatformKey;
   affiliateUrl: string;
   income: number | null;
+  isMall?: boolean;
   isActive: boolean;
   sortOrder: number;
   createdAt: string;
@@ -296,6 +298,7 @@ function toProduct(p: ProductRowInput): Product {
     platform: p.platform,
     affiliateUrl: p.affiliateUrl,
     income: p.income,
+    isMall: Boolean(p.isMall),
     isActive: p.isActive,
     sortOrder: p.sortOrder,
     createdAt: p.createdAt,
@@ -311,7 +314,7 @@ export async function getPublicProducts(): Promise<Product[]> {
       orderBy: { sortOrder: "asc" },
       select: {
         id: true, label: true, internalNote: true, category: true, iconKey: true,
-        platform: true, affiliateUrl: true, income: true,
+        platform: true, affiliateUrl: true, income: true, isMall: true,
         isActive: true, sortOrder: true, createdAt: true, updatedAt: true,
         _count: { select: { clicks: true } },
       },
@@ -320,7 +323,7 @@ export async function getPublicProducts(): Promise<Product[]> {
       toProduct({
         id: r.id, label: r.label, internalNote: r.internalNote, category: r.category,
         iconKey: r.iconKey, platform: r.platform as PlatformKey, affiliateUrl: r.affiliateUrl, income: r.income,
-        isActive: r.isActive, sortOrder: r.sortOrder,
+        isMall: r.isMall, isActive: r.isActive, sortOrder: r.sortOrder,
         createdAt: toIso(r.createdAt), updatedAt: toIso(r.updatedAt),
         clicks: r._count.clicks,
       })
@@ -346,7 +349,7 @@ export async function getAllProducts(): Promise<Product[]> {
       orderBy: { sortOrder: "asc" },
       select: {
         id: true, label: true, internalNote: true, category: true, iconKey: true,
-        platform: true, affiliateUrl: true, income: true,
+        platform: true, affiliateUrl: true, income: true, isMall: true,
         isActive: true, sortOrder: true, createdAt: true, updatedAt: true,
         _count: { select: { clicks: true } },
       },
@@ -355,7 +358,7 @@ export async function getAllProducts(): Promise<Product[]> {
       toProduct({
         id: r.id, label: r.label, internalNote: r.internalNote, category: r.category,
         iconKey: r.iconKey, platform: r.platform as PlatformKey, affiliateUrl: r.affiliateUrl, income: r.income,
-        isActive: r.isActive, sortOrder: r.sortOrder,
+        isMall: r.isMall, isActive: r.isActive, sortOrder: r.sortOrder,
         createdAt: toIso(r.createdAt), updatedAt: toIso(r.updatedAt),
         clicks: r._count.clicks,
       })
@@ -380,7 +383,7 @@ export async function getProduct(id: string): Promise<Product | null> {
       where: { id },
       select: {
         id: true, label: true, internalNote: true, category: true, iconKey: true,
-        platform: true, affiliateUrl: true, income: true,
+        platform: true, affiliateUrl: true, income: true, isMall: true,
         isActive: true, sortOrder: true, createdAt: true, updatedAt: true,
       },
     });
@@ -388,7 +391,7 @@ export async function getProduct(id: string): Promise<Product | null> {
     return toProduct({
       id: r.id, label: r.label, internalNote: r.internalNote, category: r.category,
       iconKey: r.iconKey, platform: r.platform as PlatformKey, affiliateUrl: r.affiliateUrl,
-      income: r.income, isActive: r.isActive, sortOrder: r.sortOrder,
+      income: r.income, isMall: r.isMall, isActive: r.isActive, sortOrder: r.sortOrder,
       createdAt: toIso(r.createdAt), updatedAt: toIso(r.updatedAt),
       clicks: 0,
     });
@@ -412,6 +415,7 @@ export type ProductInput = {
   platform: PlatformKey;
   affiliateUrl: string;
   income?: number | null;
+  isMall?: boolean;
   isActive?: boolean;
   sortOrder?: number;
 };
@@ -508,8 +512,50 @@ export async function deleteProduct(id: string): Promise<boolean> {
 }
 
 /* =========================================================================
- * Click tracking
+ * Search Analytics
  * ======================================================================== */
+
+const mockSearchLogs: { query: string; createdAt: Date }[] = [];
+
+export async function recordSearch(query: string): Promise<boolean> {
+  const clean = query.trim().toLowerCase();
+  if (!clean || clean.length < 2 || /^\d{1,3}$/.test(clean)) return false;
+
+  if (isDb()) {
+    try {
+      await prisma.searchLog.create({ data: { query: clean } });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  mockSearchLogs.push({ query: clean, createdAt: new Date() });
+  return true;
+}
+
+export type PopularSearch = { query: string; count: number };
+
+export async function getPopularSearches(limit = 6): Promise<PopularSearch[]> {
+  if (isDb()) {
+    const groups = await (prisma as unknown as { searchLog: { groupBy: (args: unknown) => Promise<{ query: string; _count: { query: number } }[]> } }).searchLog.groupBy({
+      by: ["query"],
+      _count: { query: true },
+      orderBy: { _count: { query: "desc" } },
+      take: limit,
+    });
+    return groups.map((g) => ({ query: g.query, count: g._count.query }));
+  }
+
+  const map = new Map<string, number>();
+  for (const log of mockSearchLogs) {
+    map.set(log.query, (map.get(log.query) ?? 0) + 1);
+  }
+  return Array.from(map.entries())
+    .map(([query, count]) => ({ query, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, limit);
+}
 
 export async function recordClick(productId: string): Promise<boolean> {
   if (isDb()) {

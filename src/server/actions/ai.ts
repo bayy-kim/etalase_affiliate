@@ -19,9 +19,10 @@ export type AiAnalysisResult = {
   };
 };
 
-const PRODUCT_FIDELITY_RULE = `ATURAN KETAT (WAJIB): PRODUK ASLI TIDAK BOLEH DIUBAH/DIMODIFIKASI SEDIKITPUN (STRICTLY PRESERVE THE ORIGINAL PRODUCT AS-IS).
-JANGAN mengubah desain, kemasan, packaging, label, tulisan/branding pada produk, warna, logo, bentuk, atau isi produk dalam prompt video yang dihasilkan.
-Video hanya menampilkan produk persis seperti foto aslinya dari semua sudut dengan pencahayaan natural yang baik. JANGAN menambahkan elemen/gimmick yang mengubah tampilan produk.`;
+const PRODUCT_FIDELITY_RULE = `ATURAN KETAT (WAJIB): JANGAN PERNAH MENDESKRIPSIKAN ULANG TAMPILAN PRODUK DALAM TEKS PROMPT.
+DILARANG menyebut warna, motif, kain, desain, packaging, label, atau branding produk dalam teks.
+Gunakan frasa "[product reference image attached]" sebagai subjek, karena pengguna akan mengunggah foto produk langsung ke Google Flow (image-to-video) sehingga produk diambil 100% dari foto asli.
+Prompt hanya mendeskripsikan gerakan kamera, pencahayaan, scene, dan styling model — BUKAN tampilan produk.`;
 
 function systemInstructionsFor(category: string): string {
   if (category === "skincare") {
@@ -67,8 +68,8 @@ Berikan respon DALAM FORMAT JSON VALID tanpa markdown wrapper dengan struktur:
 {
   "category": "${category}",
   "visualConcept": "Penjelasan singkat konsep video dalam Bahasa Indonesia",
-  "flowPrompt": "Prompt Video bahasa Inggris lengkap untuk Google Flow (Deskripsikan subjek, gerakan kamera slow pan, lighting 4k photorealistic, aesthetic, produk tampil persis sesuai foto asli tanpa modifikasi)",
-  "negativePrompt": "Kata kunci terlarang bahasa Inggris (misal: celebrity, famous face, distorted fingers, blurry product, face jika skincare, altered product, changed packaging, modified design, different color, wrong label, extra text on product)",
+  "flowPrompt": "Prompt Video bahasa Inggris untuk Google Flow yang TIDAK mendeskripsikan tampilan produk (JANGAN sebut warna/motif/desain produk). Gunakan frasa '[product reference image attached]' sebagai subjek, lalu hanya deskripsikan gerakan kamera slow pan, pencahayaan natural 4k photorealistic, scene, dan styling model.",
+  "negativePrompt": "Kata kunci terlarang bahasa Inggris (misal: celebrity, famous face, distorted fingers, blurry video, warped fabric, wrong colors, face jika skincare)",
   "suggestedSettings": {
     "aspectRatio": "9:16 (Vertical TikTok)",
     "motionSpeed": "3 - Smooth & Steady",

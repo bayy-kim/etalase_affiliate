@@ -25,6 +25,7 @@ const NAV = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/products", label: "Products", icon: Package },
   { href: "/admin/earnings", label: "Earnings", icon: Wallet },
+  { href: "/admin/aichat-gemini", label: "AI Content Studio", icon: Sparkles },
   { href: "/admin/guide", label: "Panduan Admin", icon: BookOpen },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];

@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, LayoutDashboard, Package, Settings, Wallet } from "lucide-react";
+import { BookOpen, LayoutDashboard, Package, Settings, Sparkles } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
 const items = [
   { href: "/admin/dashboard", label: "Overview", icon: LayoutDashboard },
   { href: "/admin/products", label: "Products", icon: Package },
-  { href: "/admin/earnings", label: "Earnings", icon: Wallet },
+  { href: "/admin/aichat-gemini", label: "AI Studio", icon: Sparkles },
   { href: "/admin/guide", label: "Panduan", icon: BookOpen },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];

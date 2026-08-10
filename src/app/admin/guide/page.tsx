@@ -12,6 +12,8 @@ import {
   HelpCircle,
   ShoppingBag,
   Share2,
+  Sparkles,
+  Video,
 } from "lucide-react";
 
 import { AdminShell } from "@/components/admin-shell";
@@ -201,6 +203,52 @@ export default function AdminGuidePage() {
             </ul>
           </section>
         </div>
+
+        {/* Modul AI Studio & Google Flow */}
+        <section className="flex flex-col gap-6 rounded-3xl border border-indigo-200/80 bg-gradient-to-br from-indigo-50/70 via-white to-emerald-50/50 p-6 shadow-clay-card lg:p-8">
+          <div className="flex items-center gap-3">
+            <span className="flex h-12 w-12 items-center justify-center rounded-2xl border-t border-white border-b border-indigo-200 bg-gradient-to-b from-indigo-500 to-indigo-700 text-white shadow-md">
+              <Sparkles className="h-6 w-6" />
+            </span>
+            <div>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-600">
+                Fitur Unggulan Pro
+              </span>
+              <h3 className="text-[20px] font-extrabold text-slate-900">
+                Panduan AI Content Studio & Setting Google Flow (Veo / VideoFX)
+              </h3>
+            </div>
+          </div>
+
+          <p className="text-[14px] leading-relaxed text-slate-600">
+            Anda dapat menggunakan menu <code>/admin/aichat-gemini</code> untuk menganalisis foto produk Anda. AI akan secara otomatis merancang prompt video sinematik yang siap ditempelkan di <strong>Google Flow Pro</strong> tanpa menghabiskan kuota secara sia-sia.
+          </p>
+
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div className="flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+              <div className="flex items-center gap-2 font-bold text-slate-900">
+                <Video className="h-5 w-5 text-indigo-600" />
+                <span>Pengaturan Optimal di Google Flow</span>
+              </div>
+              <ul className="space-y-2 text-[13px] text-slate-600">
+                <li>• <strong>Aspect Ratio:</strong> Pilih <code className="font-bold text-indigo-600">9:16</code> (Format Vertikal TikTok / Shorts / Reels).</li>
+                <li>• <strong>Motion Speed:</strong> Atur ke nilai <code className="font-bold text-indigo-600">3 atau 4</code> (Gerakan sedang agar bentuk produk tetap stabil & tidak terdistorsi).</li>
+                <li>• <strong>Camera Control:</strong> Pilih <code className="font-bold text-indigo-600">Slow Pan / Macro Close-up</code> untuk memperlihatkan tekstur produk secara jelas.</li>
+              </ul>
+            </div>
+
+            <div className="flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+              <div className="flex items-center gap-2 font-bold text-slate-900">
+                <ShieldCheck className="h-5 w-5 text-emerald-600" />
+                <span>Aturan Khusus Kategori AI</span>
+              </div>
+              <ul className="space-y-2 text-[13px] text-slate-600">
+                <li>• <strong>Skincare:</strong> AI otomatis mengunci prompt ke demonstrasi <code className="font-bold text-emerald-600">TANGAN SAJA</code> (tanpa wajah) dengan pencahayaan alami.</li>
+                <li>• <strong>Fashion:</strong> AI otomatis menggunakan model <code className="font-bold text-emerald-600">Wanita Lokal Natural</code> (Strictly NO Celebrities/Famous Artists).</li>
+              </ul>
+            </div>
+          </div>
+        </section>
 
         {/* Tutorial Menyalin Link Affiliate (TikTok & Shopee) */}
         <section className="flex flex-col gap-6 rounded-3xl border border-slate-200/80 bg-white p-6 shadow-clay-card lg:p-8">

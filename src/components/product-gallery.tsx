@@ -224,6 +224,7 @@ export function ProductGallery({
           <PixelLoadingOverlay
             label={navigatingProduct.label}
             platform={navigatingProduct.platform}
+            onClose={() => setNavigatingProduct(null)}
           />
         )}
       </AnimatePresence>

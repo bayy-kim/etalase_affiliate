@@ -53,7 +53,7 @@ export function AdminShell({
   return (
     <div className="min-h-dvh bg-[#f0f2f7] text-slate-800">
       {/* Sidebar — desktop Taskly style */}
-      <aside className="fixed left-4 top-4 bottom-4 z-40 hidden w-64 flex-col rounded-3xl border border-slate-200/80 bg-white p-4 shadow-clay-card lg:flex">
+      <aside className="fixed left-4 top-4 bottom-4 z-40 hidden w-64 flex-col overflow-y-auto no-scrollbar rounded-3xl border border-slate-200/80 bg-white p-4 shadow-clay-card lg:flex">
         <div className="px-3 pb-6 pt-2">
           <Logo />
         </div>

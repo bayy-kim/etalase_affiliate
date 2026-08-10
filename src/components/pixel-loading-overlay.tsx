@@ -1,16 +1,41 @@
 "use client";
 
+import { useEffect } from "react";
 import { motion } from "motion/react";
+import { X } from "lucide-react";
 import { type PlatformKey, platformLabel } from "@/lib/icons";
 
 export function PixelLoadingOverlay({
   label,
   platform,
+  onClose,
 }: {
   label: string;
   platform: PlatformKey;
+  onClose?: () => void;
 }) {
   const isShopee = platform === "SHOPEE";
+
+  useEffect(() => {
+    // Auto close overlay after 6 seconds safety fallback (jika redirect tertahan)
+    const timer = setTimeout(() => {
+      if (onClose) onClose();
+    }, 6000);
+
+    // Reset overlay jika pengunjung menekan tombol Back di browser (bfcache pageshow event)
+    const handlePageShow = (e: PageTransitionEvent) => {
+      if (e.persisted && onClose) {
+        onClose();
+      }
+    };
+
+    window.addEventListener("pageshow", handlePageShow);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("pageshow", handlePageShow);
+    };
+  }, [onClose]);
 
   return (
     <motion.div
@@ -22,8 +47,20 @@ export function PixelLoadingOverlay({
       <motion.div
         initial={{ scale: 0.9, y: 12 }}
         animate={{ scale: 1, y: 0 }}
-        className="flex w-full max-w-sm flex-col items-center gap-4 rounded-3xl border border-slate-200/80 bg-white p-6 text-center shadow-clay-card"
+        className="relative flex w-full max-w-sm flex-col items-center gap-4 rounded-3xl border border-slate-200/80 bg-white p-6 text-center shadow-clay-card"
       >
+        {/* Tombol Tutup / Batal Manual */}
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Tutup pratinjau"
+            className="absolute right-3.5 top-3.5 flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
+
         {/* Pixel Art 8-bit Shopping Bag Container */}
         <div className="relative flex h-20 w-20 items-center justify-center rounded-2xl border-t border-white border-b border-slate-200 bg-gradient-to-b from-slate-50 to-slate-100 shadow-md">
           {/* Animated Pixel Art SVG */}
@@ -51,7 +88,7 @@ export function PixelLoadingOverlay({
         </div>
 
         {/* Status text */}
-        <div className="flex flex-col items-center gap-1.5">
+        <div className="flex flex-col items-center gap-1.5 px-2">
           <span
             className={`inline-block rounded-full px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider ${
               isShopee ? "bg-orange-50 text-orange-600" : "bg-emerald-50 text-emerald-600"

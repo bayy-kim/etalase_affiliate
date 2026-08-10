@@ -74,7 +74,7 @@ export default function AiChatGeminiPage() {
             </span>
             <div>
               <span className="rounded-full bg-indigo-100 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-indigo-700">
-                Gemini 2.5 Flash Vision AI
+                Gemini Flash 3.6 Vision AI
               </span>
               <h2 className="mt-1 text-[22px] font-extrabold tracking-tight text-slate-900">
                 Studio Prompt Video Google Flow / Veo Pro

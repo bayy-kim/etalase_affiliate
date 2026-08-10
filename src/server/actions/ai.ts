@@ -19,19 +19,26 @@ export type AiAnalysisResult = {
   };
 };
 
+const PRODUCT_FIDELITY_RULE = `ATURAN KETAT (WAJIB): PRODUK ASLI TIDAK BOLEH DIUBAH/DIMODIFIKASI SEDIKITPUN (STRICTLY PRESERVE THE ORIGINAL PRODUCT AS-IS).
+JANGAN mengubah desain, kemasan, packaging, label, tulisan/branding pada produk, warna, logo, bentuk, atau isi produk dalam prompt video yang dihasilkan.
+Video hanya menampilkan produk persis seperti foto aslinya dari semua sudut dengan pencahayaan natural yang baik. JANGAN menambahkan elemen/gimmick yang mengubah tampilan produk.`;
+
 function systemInstructionsFor(category: string): string {
   if (category === "skincare") {
     return `KATEGORI: Skincare & Beauty.
 ATURAN UTAMA: DILARANG MENAMPILKAN WAJAH MODEL (STRICTLY NO FACES).
-Gunakan demonstrasi TANGAN SAJA (Hand-only demonstration), close-up tekstur cream/serum pada punggung tangan atau telapak tangan dengan pencahayaan lembut.`;
+Gunakan demonstrasi TANGAN SAJA (Hand-only demonstration), close-up tekstur cream/serum pada punggung tangan atau telapak tangan dengan pencahayaan lembut.
+${PRODUCT_FIDELITY_RULE}`;
   }
   if (category === "fashion") {
     return `KATEGORI: Fashion & Apparel.
 ATURAN UTAMA: Wajib menggunakan Model Wanita Lokal / Micro-Influencer Natural (Aesthetic everyday female model).
-DILARANG MENAMPILKAN ARTIS ATAU SELEBRITI TERNAMA (STRICTLY NO FAMOUS CELEBRITIES / ARTISTS).`;
+DILARANG MENAMPILKAN ARTIS ATAU SELEBRITI TERNAMA (STRICTLY NO FAMOUS CELEBRITIES / ARTISTS).
+${PRODUCT_FIDELITY_RULE}`;
   }
   return `KATEGORI: Gadget / Lifestyle.
-Aturan: Konsep estetis hands-on desk setup / aesthetic daily use.`;
+Aturan: Konsep estetis hands-on desk setup / aesthetic daily use.
+${PRODUCT_FIDELITY_RULE}`;
 }
 
 function parseJsonFromText(rawText: string): AiAnalysisResult {
@@ -54,12 +61,14 @@ Tugas Anda adalah mengidentifikasi produk (bila ada gambar) dan menghasilkan pro
 
 ${systemInstructionsFor(category)}
 
+${PRODUCT_FIDELITY_RULE}
+
 Berikan respon DALAM FORMAT JSON VALID tanpa markdown wrapper dengan struktur:
 {
   "category": "${category}",
   "visualConcept": "Penjelasan singkat konsep video dalam Bahasa Indonesia",
-  "flowPrompt": "Prompt Video bahasa Inggris lengkap untuk Google Flow (Deskripsikan subjek, gerakan kamera slow pan, lighting 4k photorealistic, aesthetic)",
-  "negativePrompt": "Kata kunci terlarang bahasa Inggris (misal: celebrity, famous face, distorted fingers, blurry product, face jika skincare)",
+  "flowPrompt": "Prompt Video bahasa Inggris lengkap untuk Google Flow (Deskripsikan subjek, gerakan kamera slow pan, lighting 4k photorealistic, aesthetic, produk tampil persis sesuai foto asli tanpa modifikasi)",
+  "negativePrompt": "Kata kunci terlarang bahasa Inggris (misal: celebrity, famous face, distorted fingers, blurry product, face jika skincare, altered product, changed packaging, modified design, different color, wrong label, extra text on product)",
   "suggestedSettings": {
     "aspectRatio": "9:16 (Vertical TikTok)",
     "motionSpeed": "3 - Smooth & Steady",

@@ -6,6 +6,7 @@ import { Search, X, ArrowLeft } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Avatar } from "@/components/avatar";
 import { logSearchAction } from "@/server/actions/search";
+import { cn } from "@/lib/utils";
 
 interface MobileHeaderWithSearchProps {
   displayName?: string;
@@ -23,7 +24,17 @@ export function MobileHeaderWithSearch({
 
   const [isOpen, setIsOpen] = useState(initialQuery.length > 0);
   const [query, setQuery] = useState(initialQuery);
+  const [isScrolled, setIsScrolled] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Deteksi posisi scroll untuk efek glassmorphism dinamis
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 12);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // Sync state lokal dengan URL search query
   useEffect(() => {
@@ -88,7 +99,14 @@ export function MobileHeaderWithSearch({
   };
 
   return (
-    <header className="sticky top-0 z-40 flex h-14 w-full items-center justify-between border-b border-slate-200/60 bg-[#f0f2f7]/95 px-4 backdrop-blur-md lg:hidden">
+    <header
+      className={cn(
+        "sticky top-0 z-40 flex w-full items-center justify-between border-b transition-all duration-300 lg:hidden px-4",
+        isScrolled
+          ? "h-12 border-slate-200/40 bg-[#f0f2f7]/80 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.03)] backdrop-blur-lg"
+          : "h-14 border-transparent bg-[#f0f2f7]/50 backdrop-blur-md"
+      )}
+    >
       <div className="relative flex h-full w-full items-center overflow-hidden">
         <AnimatePresence initial={false} mode="wait">
           {!isOpen ? (

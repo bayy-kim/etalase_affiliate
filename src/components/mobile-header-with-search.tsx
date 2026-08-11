@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { Telescope, X, ArrowLeft } from "lucide-react";
+import { Search, X, ArrowLeft } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Avatar } from "@/components/avatar";
 import { logSearchAction } from "@/server/actions/search";
@@ -112,7 +112,7 @@ export function MobileHeaderWithSearch({
                 </span>
               </div>
 
-              {/* Tombol Teleskop */}
+              {/* Tombol Kaca Pembesar (Search) */}
               <motion.button
                 whileTap={{ scale: 0.92 }}
                 type="button"
@@ -120,7 +120,7 @@ export function MobileHeaderWithSearch({
                 aria-label="Buka pencarian produk"
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-emerald-200/80 bg-emerald-50 text-emerald-600 shadow-clay-sm transition-all hover:bg-emerald-100 active:scale-95"
               >
-                <Telescope className="h-5 w-5 text-emerald-600" />
+                <Search className="h-5 w-5 text-emerald-600" />
               </motion.button>
             </motion.div>
           ) : (

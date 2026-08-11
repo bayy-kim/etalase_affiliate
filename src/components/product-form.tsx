@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useActionState } from "react";
-import { Link2 } from "lucide-react";
+import { Link2, Clipboard, Check, AlertCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,32 +28,102 @@ export function ProductForm({
     : createProductAction;
 
   const [state, formAction, pending] = useActionState(action, initial);
+  
+  // State terkendali (controlled state) untuk memelihara input saat error/submitting
   const [labelValue, setLabelValue] = useState(product?.label ?? "");
   const [noteValue, setNoteValue] = useState(product?.internalNote ?? "");
+  const [categoryValue, setCategoryValue] = useState(product?.category ?? "");
+  const [urlValue, setUrlValue] = useState(product?.affiliateUrl ?? "");
+  const [incomeValue, setIncomeValue] = useState(product?.income?.toString() ?? "");
   const [platform, setPlatform] = useState<PlatformKey>(product?.platform ?? "TIKTOK_SHOP");
   const [iconKey, setIconKey] = useState(product?.iconKey ?? "sparkles");
   const [isMall, setIsMall] = useState(product?.isMall ?? false);
   const [isActive, setIsActive] = useState(product?.isActive ?? true);
 
+  // Status notifikasi auto-detect
+  const [detectedPlatform, setDetectedPlatform] = useState<string | null>(null);
+  const [showPasteSuccess, setShowPasteSuccess] = useState(false);
+
   const err = state && "fieldErrors" in state ? state.fieldErrors : undefined;
   const topError = state && "error" in state && state.error ? state.error : undefined;
 
+  // Handler untuk mendeteksi platform dari URL
+  const handleUrlChange = (value: string) => {
+    setUrlValue(value);
+    const lower = value.toLowerCase();
+    
+    if (lower.includes("shopee") || lower.includes("shp.ee")) {
+      setPlatform("SHOPEE");
+      setDetectedPlatform("Shopee");
+    } else if (
+      lower.includes("tiktok") ||
+      lower.includes("tokopedia") ||
+      lower.includes("vt.tokopedia")
+    ) {
+      setPlatform("TIKTOK_SHOP");
+      setDetectedPlatform("TikTok Shop");
+    } else {
+      setDetectedPlatform(null);
+    }
+  };
+
+  // Fungsi Paste dari Clipboard
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) {
+        handleUrlChange(text);
+        setShowPasteSuccess(true);
+        setTimeout(() => setShowPasteSuccess(false), 2000);
+      }
+    } catch (err) {
+      console.warn("Gagal membaca clipboard. Berikan izin akses clipboard di browsermu.", err);
+    }
+  };
+
   return (
     <form action={formAction} className="flex flex-col gap-6 pb-28 lg:pb-0">
-      {topError && (
-        <p
-          role="alert"
-          className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-[13px] text-rose-700 font-medium"
-        >
-          {topError}
-        </p>
+      
+      {/* ⚠️ NOTIFIKASI ERROR DETIL (Menjelaskan field mana yang salah / kurang) */}
+      {(topError || (err && Object.keys(err).length > 0)) && (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-[13px] text-rose-700 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="flex items-start gap-2.5">
+            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-rose-500" />
+            <div>
+              <p className="font-extrabold text-[14px] leading-tight text-rose-800">
+                ⚠️ Mohon lengkapi atau perbaiki data produk:
+              </p>
+              {topError && <p className="mt-1 font-semibold">{topError}</p>}
+              {err && Object.keys(err).length > 0 && (
+                <ul className="mt-2 list-disc pl-4 space-y-1 font-medium">
+                  {Object.entries(err).map(([field, msg]) => {
+                    let fieldLabel = field;
+                    if (field === "label") fieldLabel = "Label Produk";
+                    if (field === "category") fieldLabel = "Kategori";
+                    if (field === "iconKey") fieldLabel = "Icon";
+                    if (field === "platform") fieldLabel = "Platform";
+                    if (field === "affiliateUrl") fieldLabel = "Link Affiliate";
+                    
+                    return (
+                      <li key={field}>
+                        <span className="font-bold text-rose-900">{fieldLabel}:</span> {msg}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Label */}
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="label">Label Produk</Label>
+            <Label htmlFor="label" className={cn(err?.label && "text-rose-600 font-semibold")}>
+              Label Produk
+            </Label>
             <span
               className={cn(
                 "text-[11px] font-bold transition-colors",
@@ -74,11 +144,14 @@ export function ProductForm({
             onChange={(e) => setLabelValue(e.target.value.slice(0, 60))}
             maxLength={60}
             placeholder="Contoh: Skincare Anti-Aging"
+            className={cn(
+              err?.label && "border-rose-500 focus:border-rose-500 focus:ring-rose-500/10"
+            )}
             aria-invalid={Boolean(err?.label)}
             aria-describedby={err?.label ? "label-error" : undefined}
           />
           {err?.label && (
-            <p id="label-error" className="text-[12px] text-rose-600 font-medium" role="alert">
+            <p id="label-error" className="text-[12px] text-rose-600 font-semibold" role="alert">
               {err.label}
             </p>
           )}
@@ -86,8 +159,18 @@ export function ProductForm({
 
         {/* Kategori */}
         <div className="flex flex-col gap-2">
-          <Label htmlFor="category">Kategori</Label>
-          <Select id="category" name="category" defaultValue={product?.category ?? ""}>
+          <Label htmlFor="category" className={cn(err?.category && "text-rose-600 font-semibold")}>
+            Kategori
+          </Label>
+          <Select 
+            id="category" 
+            name="category" 
+            value={categoryValue}
+            onChange={(e) => setCategoryValue(e.target.value)}
+            className={cn(
+              err?.category && "border-rose-500 focus:border-rose-500 focus:ring-rose-500/10"
+            )}
+          >
             <option value="" disabled>
               Pilih Kategori
             </option>
@@ -98,7 +181,7 @@ export function ProductForm({
             ))}
           </Select>
           {err?.category && (
-            <p className="text-[12px] text-rose-600 font-medium" role="alert">
+            <p className="text-[12px] text-rose-600 font-semibold" role="alert">
               {err.category}
             </p>
           )}
@@ -107,7 +190,7 @@ export function ProductForm({
 
       {/* Icon */}
       <div className="flex flex-col gap-2">
-        <Label>Pilih Icon</Label>
+        <Label className={cn(err?.iconKey && "text-rose-600 font-semibold")}>Pilih Icon</Label>
         <div className="no-scrollbar -mx-1 flex gap-3.5 overflow-x-auto px-1 py-2">
           {iconPicker.map((item) => {
             const Icon = item.icon;
@@ -123,7 +206,8 @@ export function ProductForm({
                   "flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border transition-all duration-200 active:scale-95 focus-visible:outline-2 focus-visible:outline-indigo-500",
                   selected
                     ? "border-t border-white border-b border-indigo-700 bg-gradient-to-b from-indigo-500 to-indigo-700 text-white shadow-[0_8px_16px_-3px_rgba(99,102,241,0.4)] scale-105"
-                    : "border-t border-white border-b border-slate-200/80 bg-gradient-to-b from-slate-50 to-slate-100 text-slate-500 shadow-sm hover:border-indigo-300 hover:text-indigo-600"
+                    : "border-t border-white border-b border-slate-200/80 bg-gradient-to-b from-slate-50 to-slate-100 text-slate-500 shadow-sm hover:border-indigo-300 hover:text-indigo-600",
+                  err?.iconKey && !selected && "border-rose-300 hover:border-rose-400"
                 )}
               >
                 <Icon className="h-6 w-6" aria-hidden="true" />
@@ -133,7 +217,7 @@ export function ProductForm({
         </div>
         <input type="hidden" name="iconKey" value={iconKey} />
         {err?.iconKey && (
-          <p className="text-[12px] text-rose-600 font-medium" role="alert">
+          <p className="text-[12px] text-rose-600 font-semibold" role="alert">
             {err.iconKey}
           </p>
         )}
@@ -142,18 +226,21 @@ export function ProductForm({
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Platform */}
         <div className="flex flex-col gap-2">
-          <Label>Platform</Label>
+          <Label className={cn(err?.platform && "text-rose-600 font-semibold")}>Platform</Label>
           <div className="flex h-14 gap-1.5 rounded-2xl border border-slate-200/80 bg-slate-50/50 p-1.5 shadow-inner">
             {(["TIKTOK_SHOP", "SHOPEE"] as PlatformKey[]).map((p) => (
               <button
                 key={p}
                 type="button"
-                onClick={() => setPlatform(p)}
+                onClick={() => {
+                  setPlatform(p);
+                  setDetectedPlatform(null); // Reset alert auto-detect jika dipencet manual
+                }}
                 aria-pressed={platform === p}
                 className={cn(
                   "flex-1 rounded-xl text-[14px] font-semibold transition-all",
                   platform === p
-                    ? "bg-white text-indigo-600 shadow-sm border border-slate-200/60"
+                    ? "bg-white text-indigo-600 shadow-sm border border-slate-200/60 animate-in fade-in duration-200"
                     : "text-slate-500 hover:text-slate-800"
                 )}
               >
@@ -163,7 +250,7 @@ export function ProductForm({
           </div>
           <input type="hidden" name="platform" value={platform} />
           {err?.platform && (
-            <p className="text-[12px] text-rose-600 font-medium" role="alert">
+            <p className="text-[12px] text-rose-600 font-semibold" role="alert">
               {err.platform}
             </p>
           )}
@@ -171,7 +258,28 @@ export function ProductForm({
 
         {/* Affiliate URL */}
         <div className="flex flex-col gap-2">
-          <Label htmlFor="affiliateUrl">Link Affiliate</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="affiliateUrl" className={cn(err?.affiliateUrl && "text-rose-600 font-semibold")}>
+              Link Affiliate
+            </Label>
+            <button
+              type="button"
+              onClick={handlePaste}
+              className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
+            >
+              {showPasteSuccess ? (
+                <>
+                  <Check className="h-3 w-3 text-emerald-500 animate-in zoom-in duration-150" />
+                  <span className="text-emerald-600">Berhasil Ditempel!</span>
+                </>
+              ) : (
+                <>
+                  <Clipboard className="h-3 w-3" />
+                  <span>Tempel Link</span>
+                </>
+              )}
+            </button>
+          </div>
           <div className="relative">
             <Link2
               className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
@@ -181,15 +289,28 @@ export function ProductForm({
               id="affiliateUrl"
               name="affiliateUrl"
               type="url"
-              defaultValue={product?.affiliateUrl ?? ""}
+              value={urlValue}
+              onChange={(e) => handleUrlChange(e.target.value)}
               placeholder="https://..."
-              className="pl-12"
+              className={cn(
+                "pl-12 pr-4",
+                err?.affiliateUrl && "border-rose-500 focus:border-rose-500 focus:ring-rose-500/10"
+              )}
               aria-invalid={Boolean(err?.affiliateUrl)}
               aria-describedby={err?.affiliateUrl ? "url-error" : undefined}
             />
           </div>
+          
+          {/* Badge Pemberitahuan Auto-Detect Platform */}
+          {detectedPlatform && (
+            <p className="flex items-center gap-1 text-[11px] font-bold text-emerald-600 animate-in slide-in-from-top-1 duration-150">
+              <Check className="h-3.5 w-3.5 text-emerald-500" />
+              Auto-detect: Platform {detectedPlatform} terpilih!
+            </p>
+          )}
+
           {err?.affiliateUrl && (
-            <p id="url-error" className="text-[12px] text-rose-600 font-medium" role="alert">
+            <p id="url-error" className="text-[12px] text-rose-600 font-semibold" role="alert">
               {err.affiliateUrl}
             </p>
           )}
@@ -210,7 +331,8 @@ export function ProductForm({
               type="number"
               inputMode="numeric"
               min={0}
-              defaultValue={product?.income ?? ""}
+              value={incomeValue}
+              onChange={(e) => setIncomeValue(e.target.value)}
               placeholder="0"
               className="pl-12"
             />

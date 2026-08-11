@@ -1,9 +1,9 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { LockKeyhole } from "lucide-react";
+import Link from "next/link";
+import { ShieldAlert, ArrowLeft } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { OtpInput } from "@/components/otp-input";
@@ -21,63 +21,86 @@ export function Verify2faForm() {
   }, [state, router]);
 
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center bg-background-base px-4">
-      <header className="mb-6 flex items-center gap-2">
-        <LockKeyhole className="h-6 w-6 text-primary" aria-hidden="true" />
-        <span className="text-[24px] font-[700] leading-8 tracking-[-0.02em] text-primary">
-          ETALASE
-        </span>
-      </header>
+    <main className="relative flex min-h-dvh flex-col items-center justify-center bg-[#0d0e10] px-4 py-8 antialiased selection:bg-emerald-500 selection:text-white">
+      {/* Background Radial Glow Effect */}
+      <div
+        className="pointer-events-none absolute left-1/2 top-1/2 h-[450px] w-[450px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-500/10 blur-[120px]"
+        aria-hidden="true"
+      />
 
-      <form
-        action={formAction}
-        className="flex w-full flex-col gap-6 rounded-2xl border border-border-subtle bg-surface-card p-6"
-      >
-        <div className="flex flex-col gap-2 text-center">
-          <span className="mx-auto mb-1 flex h-12 w-12 items-center justify-center rounded-full border border-border-subtle bg-background-base">
-            <LockKeyhole className="h-6 w-6 text-primary" aria-hidden="true" />
-          </span>
-          <h1 className="text-[20px] font-[600] leading-7 tracking-[-0.01em] text-text-primary">
-            Verifikasi 2FA
-          </h1>
-          <p className="text-[14px] leading-5 text-text-secondary">
-            Buka aplikasi authenticator kamu dan masukkan kode 6 digit
-          </p>
-        </div>
-
-        {state && "error" in state && state.error && (
-          <p
-            role="alert"
-            className="rounded-xl border border-error/40 bg-error-container/30 px-3 py-2 text-[13px] text-on-error-container"
-          >
-            {state.error}
-          </p>
-        )}
-
-        <div className="flex flex-col gap-8">
-          <OtpInput error={state && "error" in state ? state.error : undefined} />
-
-          <div className="flex flex-col gap-4">
-            <Button type="submit" className="w-full" disabled={pending} aria-busy={pending}>
-              {pending ? "Memverifikasi..." : "Verifikasi"}
-            </Button>
-            <p className="text-center">
-              <a
-                href="/admin/login"
-                className="text-[14px] leading-5 text-text-secondary transition-colors hover:text-primary"
-              >
-                Kirim ulang / bantuan
-              </a>
-            </p>
+      <div className="relative w-full max-w-[420px]">
+        <form
+          action={formAction}
+          className="flex w-full flex-col gap-6 rounded-3xl border border-slate-800/80 bg-[#151619]/90 p-6 shadow-2xl backdrop-blur-xl sm:p-8"
+        >
+          {/* Header */}
+          <div className="flex flex-col items-center gap-3 text-center">
+            <div className="relative">
+              <div
+                className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 blur opacity-45"
+                aria-hidden="true"
+              />
+              <span className="relative flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-500/30 bg-[#1a1c21] text-emerald-400 shadow-md">
+                <ShieldAlert className="h-7 w-7" aria-hidden="true" />
+              </span>
+            </div>
+            <div>
+              <span className="text-[11px] font-extrabold uppercase tracking-widest text-emerald-500">
+                Two-Factor Auth
+              </span>
+              <h1 className="mt-0.5 text-xl font-bold tracking-tight text-white sm:text-2xl">
+                Verifikasi Keamanan
+              </h1>
+              <p className="mt-1 text-[13px] text-slate-400 leading-normal">
+                Buka aplikasi authenticator kamu dan masukkan kode OTP 6 digit
+              </p>
+            </div>
           </div>
-        </div>
-      </form>
 
-      <footer className="mt-6 text-center">
-        <p className="text-[12px] font-[600] uppercase tracking-[0.05em] leading-4 text-text-secondary">
-          © 2026 Etalase Affiliate. Secure Admin Access.
-        </p>
-      </footer>
+          {state && "error" in state && state.error && (
+            <p
+              role="alert"
+              className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-center text-[13px] font-medium text-rose-400"
+            >
+              {state.error}
+            </p>
+          )}
+
+          <div className="flex flex-col gap-8">
+            {/* Input OTP */}
+            <div className="flex justify-center">
+              <OtpInput error={state && "error" in state ? state.error : undefined} />
+            </div>
+
+            <div className="flex flex-col gap-4">
+              <Button
+                type="submit"
+                className="h-12 w-full bg-emerald-600 text-[15px] font-bold text-white shadow-lg shadow-emerald-600/25 hover:bg-emerald-500 active:scale-[0.99]"
+                disabled={pending}
+                aria-busy={pending}
+              >
+                {pending ? "Memverifikasi..." : "Verifikasi & Masuk"}
+              </Button>
+
+              <p className="text-center">
+                <Link
+                  href="/admin/login"
+                  className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-400 transition-colors hover:text-emerald-400"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5" />
+                  Kembali ke halaman Login
+                </Link>
+              </p>
+            </div>
+          </div>
+        </form>
+
+        <footer className="mt-6 text-center">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+            © 2026 Etalase Affiliate · Secure Portal
+          </p>
+        </footer>
+      </div>
     </main>
   );
 }

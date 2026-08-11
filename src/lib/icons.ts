@@ -24,6 +24,8 @@ import {
   Flower2,
   Gift,
   Package,
+  Backpack,
+  Briefcase,
   type LucideIcon,
 } from "lucide-react";
 
@@ -36,6 +38,9 @@ export const categoryOptions = [
   { value: "kecantikan", label: "Kecantikan" },
   { value: "hobi", label: "Hobi" },
   { value: "aksesoris", label: "Aksesoris" },
+  { value: "buku", label: "Buku" },
+  { value: "tas-selempang", label: "Tas Selempang" },
+  { value: "tas-gendong", label: "Tas Gendong" },
 ] as const;
 
 export const categorySelectOptions = [
@@ -46,7 +51,10 @@ export const categorySelectOptions = [
   { value: "makanan-minuman", label: "Makanan & Minuman" },
   { value: "kecantikan", label: "Kecantikan & Kosmetik" },
   { value: "hobi", label: "Hobi & Koleksi" },
-  { value: "aksesoris", label: "Aksesoris" },
+  { value: "aksesoris", label: "Aksesoris & Perhiasan" },
+  { value: "buku", label: "Buku & Alat Tulis" },
+  { value: "tas-selempang", label: "Tas Selempang & Sling Bag" },
+  { value: "tas-gendong", label: "Tas Gendong & Ransel" },
 ] as const;
 
 export const iconPicker = [
@@ -58,6 +66,8 @@ export const iconPicker = [
   { value: "local_fire_department", label: "Viral", icon: Flame },
   { value: "face_retouching_natural", label: "Glow", icon: SmilePlus },
   { value: "checkroom", label: "Baju", icon: Shirt },
+  { value: "backpack", label: "Tas Gendong", icon: Backpack },
+  { value: "briefcase", label: "Tas Selempang", icon: Briefcase },
   { value: "headphones", label: "Audio", icon: Headphones },
   { value: "home", label: "Rumah", icon: Home },
   { value: "smartphone", label: "Gadget", icon: Smartphone },
@@ -85,6 +95,8 @@ const iconMap: Record<string, LucideIcon> = {
   local_fire_department: Flame,
   face_retouching_natural: SmilePlus,
   checkroom: Shirt,
+  backpack: Backpack,
+  briefcase: Briefcase,
   headphones: Headphones,
   home: Home,
   sell: Tag,
@@ -97,6 +109,9 @@ const iconMap: Record<string, LucideIcon> = {
   kecantikan: Flower2,
   hobi: Gamepad2,
   aksesoris: Watch,
+  buku: BookOpen,
+  "tas-selempang": Briefcase,
+  "tas-gendong": Backpack,
   gamepad: Gamepad2,
   watch: Watch,
   wallet: Wallet,

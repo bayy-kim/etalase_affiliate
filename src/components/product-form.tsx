@@ -28,6 +28,8 @@ export function ProductForm({
     : createProductAction;
 
   const [state, formAction, pending] = useActionState(action, initial);
+  const [labelValue, setLabelValue] = useState(product?.label ?? "");
+  const [noteValue, setNoteValue] = useState(product?.internalNote ?? "");
   const [platform, setPlatform] = useState<PlatformKey>(product?.platform ?? "TIKTOK_SHOP");
   const [iconKey, setIconKey] = useState(product?.iconKey ?? "sparkles");
   const [isMall, setIsMall] = useState(product?.isMall ?? false);
@@ -50,11 +52,27 @@ export function ProductForm({
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Label */}
         <div className="flex flex-col gap-2">
-          <Label htmlFor="label">Label Produk</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="label">Label Produk</Label>
+            <span
+              className={cn(
+                "text-[11px] font-bold transition-colors",
+                labelValue.length > 55
+                  ? "text-rose-600 font-extrabold"
+                  : labelValue.length > 45
+                  ? "text-amber-600"
+                  : "text-slate-400"
+              )}
+            >
+              {labelValue.length} / 60
+            </span>
+          </div>
           <Input
             id="label"
             name="label"
-            defaultValue={product?.label ?? ""}
+            value={labelValue}
+            onChange={(e) => setLabelValue(e.target.value.slice(0, 60))}
+            maxLength={60}
             placeholder="Contoh: Skincare Anti-Aging"
             aria-invalid={Boolean(err?.label)}
             aria-describedby={err?.label ? "label-error" : undefined}
@@ -204,11 +222,27 @@ export function ProductForm({
 
         {/* Catatan internal */}
         <div className="flex flex-col gap-2">
-          <Label htmlFor="internalNote">Catatan Internal (opsional)</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="internalNote">Catatan Internal (opsional)</Label>
+            <span
+              className={cn(
+                "text-[11px] font-bold transition-colors",
+                noteValue.length > 280
+                  ? "text-rose-600 font-extrabold"
+                  : noteValue.length > 240
+                  ? "text-amber-600"
+                  : "text-slate-400"
+              )}
+            >
+              {noteValue.length} / 300
+            </span>
+          </div>
           <Input
             id="internalNote"
             name="internalNote"
-            defaultValue={product?.internalNote ?? ""}
+            value={noteValue}
+            onChange={(e) => setNoteValue(e.target.value.slice(0, 300))}
+            maxLength={300}
             placeholder="Nama asli produk untuk referensi admin"
           />
         </div>

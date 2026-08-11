@@ -14,7 +14,7 @@ export const RATE_LIMIT = {
  * Rate limiter in-memory sederhana (per IP + key).
  * Untuk single-user & multi-instance, pindahkan ke Redis/Upstash.
  */
-export function rateLimit(key: string, max = RATE_LIMIT.MAX_ATTEMPTS, windowMs = RATE_LIMIT.WINDOW_MS): {
+export function rateLimit(key: string, max: number = RATE_LIMIT.MAX_ATTEMPTS, windowMs: number = RATE_LIMIT.WINDOW_MS): {
   ok: boolean;
   remaining: number;
   retryAfterMs: number;

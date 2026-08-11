@@ -1,6 +1,7 @@
 "use server";
 
 import { getSession } from "@/lib/session";
+import { rateLimit } from "@/lib/rate-limit";
 
 const API_KEY = process.env.GEMINI_API_KEY;
 const MODEL = "gemini-flash-latest";
@@ -54,6 +55,18 @@ export async function generateContentPromptAction(
 ): Promise<AiAnalysisResult> {
   const session = await getSession();
   if (!session) return { error: "Tidak terautentikasi." };
+
+  // Batasi 30 panggilan / 60 menit per admin untuk mencegah penyalahgunaan API
+  const limiter = rateLimit(`ai-content:${session.adminId}`, 30, 60 * 60 * 1000);
+  if (!limiter.ok) {
+    const minutes = Math.ceil(limiter.retryAfterMs / 60000);
+    return { error: `Terlalu banyak permintaan AI. Coba lagi dalam ${minutes} menit.` };
+  }
+
+  if (imageBase64 && imageBase64.length > 7 * 1024 * 1024) {
+    return { error: "Ukuran gambar terlalu besar (maks ~5MB). Kompres dulu foto produknya." };
+  }
+
   if (!API_KEY) return { error: "GEMINI_API_KEY belum diatur di environment Vercel." };
 
   const promptText = `

@@ -12,7 +12,10 @@ export const productSchema = z.object({
     .string()
     .trim()
     .min(1, "Link affiliate wajib diisi")
-    .url("Link affiliate harus berupa URL yang valid"),
+    .url("Link affiliate harus berupa URL yang valid")
+    .refine((val) => /^https?:\/\//i.test(val), {
+      message: "Link affiliate harus diawali http:// atau https://",
+    }),
   income: z.coerce.number().int().min(0).max(1_000_000_000).nullable().optional(),
   isMall: z.coerce.boolean().default(false),
   isActive: z.coerce.boolean().default(true),

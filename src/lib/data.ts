@@ -593,7 +593,18 @@ export type ProductInput = {
 
 export async function createProduct(input: ProductInput): Promise<Product> {
   if (isDb()) {
-    const r = await prisma.product.create({ data: input });
+    const maxProduct = await prisma.product.findFirst({
+      orderBy: { sortOrder: "desc" },
+      select: { sortOrder: true },
+    });
+    const nextSortOrder = maxProduct ? maxProduct.sortOrder + 1 : 0;
+
+    const r = await prisma.product.create({
+      data: {
+        ...input,
+        sortOrder: input.sortOrder ?? nextSortOrder,
+      },
+    });
     return (await getProduct(r.id))!;
   }
 

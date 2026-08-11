@@ -338,12 +338,12 @@ export async function getPublicProductsPaginated({
           SELECT id FROM "Product"
           WHERE "isActive" = true
             AND (
-              similarity(label, ${cleanSearch}) > 0.25
+              GREATEST(similarity(label, ${cleanSearch}), word_similarity(${cleanSearch}, label)) > 0.3
               OR label ILIKE ${"%" + cleanSearch + "%"}
               OR category ILIKE ${"%" + cleanSearch + "%"}
               ${expandedCategory ? Prisma.sql`OR category = ${expandedCategory}` : Prisma.empty}
             )
-          ORDER BY similarity(label, ${cleanSearch}) DESC
+          ORDER BY GREATEST(similarity(label, ${cleanSearch}), word_similarity(${cleanSearch}, label)) DESC
         `;
         const matchedIds = rows.map((r) => r.id);
         whereClause.id = { in: matchedIds.length ? matchedIds : ["__none__"] };

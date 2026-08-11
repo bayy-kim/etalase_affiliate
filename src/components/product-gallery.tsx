@@ -45,14 +45,14 @@ export function ProductGallery({
   }, [initialQuery]);
 
   useEffect(() => {
-    const t = setTimeout(() => {
+    // Timer 1: live-filter produk, tetap cepat biar berasa instant
+    const filterTimer = setTimeout(() => {
       const trimmed = query.trim();
       const currentQ = searchParams.get("q") ?? "";
       if (trimmed !== currentQ) {
         const params = new URLSearchParams(searchParams.toString());
         if (trimmed) {
           params.set("q", trimmed);
-          logSearchAction(trimmed).catch(() => {});
         } else {
           params.delete("q");
         }
@@ -61,7 +61,19 @@ export function ProductGallery({
         router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
       }
     }, 350);
-    return () => clearTimeout(t);
+
+    // Timer 2: catat ke Search Intelligence, HANYA kalau user beneran berhenti ngetik
+    const logTimer = setTimeout(() => {
+      const trimmed = query.trim();
+      if (trimmed.length >= 2) {
+        logSearchAction(trimmed).catch(() => {});
+      }
+    }, 1200);
+
+    return () => {
+      clearTimeout(filterTimer);
+      clearTimeout(logTimer);
+    };
   }, [query, pathname, router, searchParams]);
 
   const loadMore = () => {
@@ -86,7 +98,7 @@ export function ProductGallery({
   return (
     <div className="flex w-full flex-col gap-4">
       {/* Search */}
-      <div role="search" aria-label="Cari produk" className="relative">
+      <div role="search" aria-label="Cari produk" className="relative hidden lg:block">
         <Search
           className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
           aria-hidden="true"

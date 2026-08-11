@@ -8,6 +8,7 @@ import { formatNumber } from "@/lib/format";
 import { CategoryTabs } from "@/components/category-tabs";
 import { ProductGallery } from "@/components/product-gallery";
 import { Avatar } from "@/components/avatar";
+import { MobileHeaderWithSearch } from "@/components/mobile-header-with-search";
 
 export const revalidate = 30;
 
@@ -47,14 +48,20 @@ export default async function StorefrontPage({
       className="flex min-h-dvh w-full flex-col overflow-x-hidden bg-background-base"
     >
       {/* Top bar mobile */}
-      <header className="sticky top-0 z-40 flex w-full items-center justify-between border-b border-slate-200/60 bg-[#f0f2f7]/90 px-4 py-2.5 backdrop-blur-md lg:hidden">
-        <span className="flex items-center gap-3">
-          <Avatar name={profile.displayName} src={profile.avatar} className="h-10 w-10 text-sm shadow-sm" />
-          <span className="text-sm font-extrabold tracking-tight text-slate-900">
-            ETALASE AFFILIATE
-          </span>
-        </span>
-      </header>
+      <Suspense
+        fallback={
+          <header className="sticky top-0 z-40 flex h-14 w-full items-center justify-between border-b border-slate-200/60 bg-[#f0f2f7]/90 px-4 backdrop-blur-md lg:hidden">
+            <div className="flex items-center gap-3">
+              <Avatar name={profile.displayName} src={profile.avatar} className="h-9 w-9 text-xs shadow-sm" />
+              <span className="text-sm font-extrabold tracking-tight text-slate-900">
+                ETALASE AFFILIATE
+              </span>
+            </div>
+          </header>
+        }
+      >
+        <MobileHeaderWithSearch displayName={profile.displayName} avatar={profile.avatar} />
+      </Suspense>
 
       {/* Konten */}
       <div className="mx-auto flex w-full max-w-[480px] flex-1 flex-col px-4 pb-12 lg:max-w-7xl lg:px-8 lg:pt-10">

@@ -1,8 +1,10 @@
 import "server-only";
+import { Prisma } from "@prisma/client";
 
 import type { PlatformKey } from "./icons";
 import { prisma } from "./prisma";
 import { encryptSecret } from "./encryption";
+import { expandCategoryFromQuery } from "@/lib/search-synonyms";
 
 /* =========================================================================
  * Types
@@ -330,10 +332,29 @@ export async function getPublicProductsPaginated({
       whereClause.category = category;
     }
     if (cleanSearch) {
-      whereClause.label = {
-        contains: cleanSearch,
-        mode: "insensitive",
-      };
+      const expandedCategory = expandCategoryFromQuery(cleanSearch);
+      try {
+        const rows = await prisma.$queryRaw<{ id: string }[]>`
+          SELECT id FROM "Product"
+          WHERE "isActive" = true
+            AND (
+              similarity(label, ${cleanSearch}) > 0.25
+              OR label ILIKE ${"%" + cleanSearch + "%"}
+              OR category ILIKE ${"%" + cleanSearch + "%"}
+              ${expandedCategory ? Prisma.sql`OR category = ${expandedCategory}` : Prisma.empty}
+            )
+          ORDER BY similarity(label, ${cleanSearch}) DESC
+        `;
+        const matchedIds = rows.map((r) => r.id);
+        whereClause.id = { in: matchedIds.length ? matchedIds : ["__none__"] };
+      } catch {
+        // Fallback jika pg_trgm belum terpasang di PostgreSQL
+        whereClause.OR = [
+          { label: { contains: cleanSearch, mode: "insensitive" } },
+          { category: { contains: cleanSearch, mode: "insensitive" } },
+          ...(expandedCategory ? [{ category: expandedCategory }] : []),
+        ];
+      }
     }
 
     const [rows, totalCount] = await Promise.all([
@@ -376,7 +397,13 @@ export async function getPublicProductsPaginated({
   }
   if (cleanSearch) {
     const q = cleanSearch.toLowerCase();
-    filtered = filtered.filter((p) => p.label.toLowerCase().includes(q));
+    const expandedCategory = expandCategoryFromQuery(cleanSearch);
+    filtered = filtered.filter(
+      (p) =>
+        p.label.toLowerCase().includes(q) ||
+        p.category.toLowerCase().includes(q) ||
+        (expandedCategory && p.category === expandedCategory)
+    );
   }
 
   const sorted = [...filtered].sort((a, b) => a.sortOrder - b.sortOrder);
@@ -662,7 +689,7 @@ export async function deleteProduct(id: string): Promise<boolean> {
 const mockSearchLogs: { query: string; createdAt: Date }[] = [];
 
 export async function recordSearch(query: string): Promise<boolean> {
-  const clean = query.trim().toLowerCase();
+  const clean = query.trim().toLowerCase().slice(0, 80); // Batasi maks 80 karakter
   if (!clean || clean.length < 2 || /^\d{1,3}$/.test(clean)) return false;
 
   if (isDb()) {

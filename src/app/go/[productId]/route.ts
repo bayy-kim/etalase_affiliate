@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 
 import { getProduct, recordClick } from "@/lib/data";
 
@@ -29,9 +29,8 @@ export async function GET(
     new URL(_req.url).searchParams.has("_rsc");
 
   if (!isPrefetch) {
-    // Non-blocking fire-and-forget click recording:
-    // Pengunjung langsung di-redirect tanpa perlu menunggu query INSERT ke database selesai.
-    recordClick(productId).catch(() => {});
+    // Menjamin recordClick selesai walau redirect sudah dikirim ke browser pengunjung
+    after(() => recordClick(productId).catch(() => {}));
   }
 
   const res = NextResponse.redirect(product.affiliateUrl, 302);
